@@ -146,6 +146,12 @@ def main():
   call: 调用业务接口，自动携带 auth 签名
     %(prog)s call --method search_trains --arg "{\"fromStation\":\"武汉\",\"toStation\":\"长沙\",\"ticketDate\":\"2026-03-08\"}"
 
+  大 JSON 从文件读入后删除（不保留文件）:
+    %(prog)s call --method flight.createOrder --arg-file order_arg.json --rm-arg-file
+
+  从 stdin 读入参数（不生成文件）:
+    cat order_arg.json | %(prog)s call --method flight.createOrder --arg-file -
+
   list: 列出 api 中的 method 定义
     %(prog)s list
         """,
@@ -155,7 +161,8 @@ def main():
     call_p = subparsers.add_parser("call", help="调用指定 method")
     call_p.add_argument("--method", required=True, help="接口 method，如 search_trains")
     call_p.add_argument("--arg", default="{}", help="业务参数 JSON")
-    call_p.add_argument("--arg-file", help="从文件读取业务参数 JSON")
+    call_p.add_argument("--arg-file", help="从文件读取业务参数 JSON；使用 - 表示从 stdin 读取，不落盘")
+    call_p.add_argument("--rm-arg-file", action="store_true", help="与 --arg-file 配合：读取后删除该文件（仅当 --arg-file 为文件路径时生效）")
 
     list_p = subparsers.add_parser("list", help="列出 method 定义")
     list_p.add_argument("--api", help="指定 api 文件，如 api/train.json")
@@ -177,8 +184,13 @@ def main():
         sys.exit(0)
 
     if args.arg_file:
-        with open(args.arg_file, "r", encoding="utf-8") as f:
-            params_part = json.load(f)
+        if args.arg_file == "-":
+            params_part = json.load(sys.stdin)
+        else:
+            with open(args.arg_file, "r", encoding="utf-8") as f:
+                params_part = json.load(f)
+            if getattr(args, "rm_arg_file", False):
+                Path(args.arg_file).unlink(missing_ok=True)
     else:
         try:
             params_part = json.loads(args.arg)
