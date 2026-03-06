@@ -40,35 +40,46 @@ def get_call_url(config):
 
 
 def compute_signature(secret_key, method_part, params_part, timestamp, nonce):
-    """计算 HMAC-SHA256 + Base64 签名"""
-    method_json = json.dumps(method_part, separators=(",", ":"), ensure_ascii=False)
-    params_json = json.dumps(params_part, separators=(",", ":"), ensure_ascii=False)
+    """计算 HMAC-SHA256 + Base64 签名（与服务端约定：method_json|params_json|timestamp|nonce）"""
+    method_json = json.dumps(method_part, separators=(',', ':'), ensure_ascii=False)
+    params_json = json.dumps(params_part, separators=(',', ':'), ensure_ascii=False)
     sign_data = f"{method_json}|{params_json}|{timestamp}|{nonce}"
     signature = hmac.new(
-        secret_key.encode("utf-8"),
-        sign_data.encode("utf-8"),
-        hashlib.sha256,
+        secret_key.encode('utf-8'),
+        sign_data.encode('utf-8'),
+        hashlib.sha256
     ).digest()
-    return base64.b64encode(signature).decode("utf-8")
+    signature_b64 = base64.b64encode(signature).decode('utf-8')
+    return signature_b64
 
 
 def build_payload(config, method_part, params_part):
-    """构造完整请求体：method + params + auth"""
+    """构造完整请求体：method + params + auth（key、timestamp、nonce、signature）"""
     timestamp = int(time.time() * 1000)
     nonce = random.randint(1, 100)
     api_key = config.get("apiKey", "")
-    secret = config.get("secret", "")
-    signature = compute_signature(secret, method_part, params_part, timestamp, nonce)
+    signature_b64 = compute_signature(api_key, method_part, params_part, timestamp, nonce)
     auth_part = {
         "key": api_key,
         "timestamp": timestamp,
         "nonce": nonce,
-        "signature": signature,
+        "signature": signature_b64
     }
     return {
         "method": method_part,
         "params": params_part,
-        "auth": auth_part,
+        "auth": auth_part
+    }
+    auth_part = {
+        "key": api_key,
+        "timestamp": timestamp,
+        "nonce": nonce,
+        "signature": signature_b64
+    }
+    return {
+        "method": method_part,
+        "params": params_part,
+        "auth": auth_part
     }
 
 
