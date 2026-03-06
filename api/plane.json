@@ -200,7 +200,7 @@
       "properties": {
         "orderType": {
           "type": "integer",
-          "description": "订单类型"
+          "description": "订单类型 默认值0(机票)"
         }
       },
       "required": []
@@ -298,7 +298,7 @@
         },
         "orderType": {
           "type": "integer",
-          "description": "订单类型"
+          "description": "订单类型 默认值0(机票)"
         },
         "subOrderType": {
           "type": "string",
@@ -489,7 +489,7 @@
         },
         "resourceType": {
           "type": "integer",
-          "description": "资源类型，默认1（机票）"
+          "description": "资源类型，默认0（机票）"
         },
         "refundType": {
           "type": "integer",
@@ -547,7 +547,7 @@
         },
         "orderType": {
           "type": "integer",
-          "description": "订单类型，默认1"
+          "description": "订单类型 默认值0(机票)"
         },
         "applyType": {
           "type": "integer",
