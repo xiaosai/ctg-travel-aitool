@@ -6,11 +6,13 @@
 
 ## 必填字段收集原则（通用）
 
-**不写死必填项**。识别到需要调用某个接口时：
-1. 查阅 [api/plane.json](../api/plane.json) 中该 method 的 `parameters.required` 及 `properties`
-2. 若用户未给出某必填字段，则提示用户必须填写
+**不写死必填项**。在需要向后台发起请求时：
+1. 查阅 [api/plane.json](../api/plane.json) 中对应 method 的 `parameters.required` 及 `properties`
+2. 若用户未给出某必填字段，用自然语言提示用户填写（勿说「请提供某某参数」）
 3. 每次只问一项缺项，待用户回复后再继续
-4. 所有必填字段收集完整后再调用接口
+4. 所有必填字段收集完整后再发起请求
+
+**面向用户的话术**：对用户说的内容禁止出现「调用某某接口」「请求 API」「getPassengerList」等任何技术用语，一律使用「正在为您查询…」「请选择乘客」等业务话术。
 
 ---
 
@@ -38,15 +40,17 @@
 
 ---
 
-## 核心下单接口链路
+## 核心步骤与数据流（Agent 内部参考，勿对用户说）
+
+以下为内部执行顺序与数据依赖，**向用户展示时只用业务话术**（如「正在查航班」「正在占位」），不得出现接口名、API、method 等。
 
 ```
-1. cityList（获取城市列表）→ 获取出发/到达城市的 cityId、flightCode
-2. flightListV2（查询航班列表）→ 使用 depCityId、arrCityId、fromCity、toCity
-3. cabinList（查询航班详情舱位列表）→ 使用 goFlight.flights.extData 作为 goExtData
-4. getPassengerList（查询乘客）→ 若为空则调用 savePassenger 新增乘客
-5. flight.createOrder（创建机票订单）→ items.resourceItemId 取自 cabinList 的 goFlightCabin.cabinList.resourceItemId
-6. getOrderStatus（轮询订单状态）→ 占位完成后引导支付
+1. 获取城市列表 → 得到出发/到达城市的 cityId、flightCode
+2. 查询航班列表 → 使用 depCityId、arrCityId、fromCity、toCity
+3. 查询航班舱位详情 → 使用航班列表返回的 goFlight.flights.extData 作为 goExtData
+4. 查询乘客列表 → 若为空则先新增乘客再继续
+5. 创建机票订单 → items.resourceItemId 取自舱位详情的 goFlightCabin.cabinList.resourceItemId
+6. 轮询订单状态 → 占位完成后引导用户支付
 ```
 
 ---
@@ -84,17 +88,13 @@
 
 ### 第一阶段：获取城市信息并收集基本信息
 
-**先调用 `cityList`** 获取城市列表，用于后续航班查询。根据用户输入的出发地、目的地，从城市列表中匹配获取：
+**内部**：先获取城市列表，用于后续航班查询。根据用户输入的出发地、目的地，从城市列表中匹配：
 - `cityId`：用于航班列表的 depCityId、arrCityId
 - `flightCode`：用于航班列表的 fromCity、toCity
 
-**cityList 调用参数（机票场景）**：以 [api/plane.json](../api/plane.json) 为准，当前入参为：
-- `domesticType`：国内/国际类型，默认国内。`1`=国内，`2`=国际；机票预订时通常传 `1`
-- `resourceType`：资源类型。`0`=飞机，`1`=酒店，`2`=火车，`3`=门票；机票场景传 `0`
+**请求参数（机票场景）**：以 [api/plane.json](../api/plane.json) 为准，国内机票入参示例：`domesticType=1`、`resourceType=0`。具体见 api 文档。
 
-调用示例（获取国内飞机城市列表）：`scripts/apiexe.py call --method cityList --arg '{"domesticType":1,"resourceType":0}'`
-
-**自然询问**，而非机械填表：
+**对用户的说法**（自然询问，不要机械填表）：
 
 ```
 好的，我来帮您预订机票！
@@ -114,17 +114,17 @@
 | 3月10日/3月10号/3-10 | 解析为 YYYYMMDD（如 20260310） |
 | 5天后 | 当前日期+N |
 
-**城市匹配**：用户说出城市名后，从 cityList 返回中查找对应城市的 cityId 和 flightCode，用于后续 flightListV2 调用。
+**城市匹配**：用户说出城市名后，从城市列表返回结果中查找对应城市的 cityId 和 flightCode，用于下一步查询航班。
 
 ---
 
 ### 第二阶段：展示航班选项
 
-调用 `flightListV2`，必填字段按接口文档，缺则提示。
+查询航班列表，必填字段按 [api/plane.json](../api/plane.json)，缺则向用户自然追问（勿说「缺少 fromDate 参数」等）。
 
-**参数映射**（来自 cityList）：
-- `depCityId`、`arrCityId`：城市列表接口返回的 cityId
-- `fromCity`、`toCity`：城市列表接口返回的 flightCode
+**参数映射**（来自城市列表结果）：
+- `depCityId`、`arrCityId`：城市列表返回的 cityId
+- `fromCity`、`toCity`：城市列表返回的 flightCode
 - `fromDate`：出发日期，**格式 YYYYMMDD**（如 20260306，无横杠）
 - `retDate`：回程日期（往返时必填），**格式 YYYYMMDD**
 - `fromTimeRanges`、`toTimeRanges`：可选，时间段筛选；内部 `startTime`、`endTime` **格式 HH:mm**
@@ -166,21 +166,18 @@ HU9012 首都机场 14:00 → 虹桥机场 16:20  2h20m  ⚡ 价格优
 
 ### 第三阶段：确认舱位选择
 
-用户选定航班后，调用 `cabinList` 获取舱位详情。
+用户选定航班后，查询该航班的舱位与价格。
 
-**cabinList 入参**（以 [api/plane.json](../api/plane.json) 为准）：
-- `goExtData`：**必填**，取自航班列表接口返回的 `goFlight.flights[].extData`（用户选中的那条航班对应的 extData）
+**入参**（以 [api/plane.json](../api/plane.json) 为准）：
+- `goExtData`：**必填**，取自航班列表返回的 `goFlight.flights[].extData`（用户选中的那条航班对应的 extData）
 - `backExtData`：返程扩展数据，**单程传空字符串 `""`**，往返时传返程航班的 extData
 - `adultNum`：成人数量（如 1）
 - `childNum`：儿童数量（如 0）
 - `cabinGrade`：舱位等级（**默认传 0**；0-不限，1-经济舱/超级经济舱，2-商务舱/头等舱）
 
-调用示例（单程、1 成人、0 儿童、不限舱位）：  
-`scripts/apiexe.py call --method cabinList --arg '{"goExtData":"<goFlight.flights[].extData>","backExtData":"","adultNum":1,"childNum":0,"cabinGrade":0}'`
-
 从返回中获取 `goFlightCabin.cabinList.resourceItemId`、各舱位价格、余票，供下单使用。
 
-**展示格式示例**（接口返回后润色展示，一行一行展示，勿用表格）：
+**展示格式示例**（将后台结果润色后这样展示给用户，一行一行，勿用表格）：
 
 ```
 💺 CA1234 可选舱位
@@ -196,9 +193,9 @@ HU9012 首都机场 14:00 → 虹桥机场 16:20  2h20m  ⚡ 价格优
 
 ### 第四阶段：选择乘客
 
-调用 `getPassengerList` 获取乘客列表。必填字段按接口文档，缺则提示。`orderType` 需传入机票订单类型。
+获取乘客列表，必填项按 [api/plane.json](../api/plane.json)，缺则向用户自然追问。机票场景需传 `orderType`（机票订单类型）。
 
-**展示格式示例**（接口返回后润色展示，一行一行展示，勿用表格）：
+**展示格式示例**（将后台结果润色后这样展示给用户，一行一行，勿用表格）：
 
 ```
 👥 请选择乘客（可多选）
@@ -213,26 +210,19 @@ HU9012 首都机场 14:00 → 虹桥机场 16:20  2h20m  ⚡ 价格优
 回复序号或姓名，如「1」「张三」或「1,2」「张三、李四」
 ```
 
-**乘客列表为空时**：提示用户添加乘客信息，调用 `savePassenger` 接口。
+**乘客列表为空时**：用自然话术提示用户添加乘客（如「还没有常用乘客，请先填写一位出行人信息」），收集姓名、身份证号、手机号三项后发起保存乘客请求。
 
-**savePassenger 入参**（以 [api/plane.json](../api/plane.json) 为准）：
-- **必填**：`passengerName`（旅客姓名）、`identityNo`（证件/身份证号）、`phoneNumber`（手机号码）
-- **可选**：其他字段（pinyinName、passengerType、gender、birthday、identityType、nationality、phoneCountryCode、status）可不传
+**保存乘客必填项**（以 [api/plane.json](../api/plane.json) 为准）：旅客姓名、证件/身份证号、手机号码。其他字段可选不传。
 
-**引导与收集**：只收集三项必填——「请问乘客姓名？」「请输入身份证号」「请输入手机号」。收集完整后调用接口，其他字段不传。
+**对用户的引导**：只问三项——「请问乘客姓名？」「请输入身份证号」「请输入手机号」。收集完整后执行保存。
 
-**调用示例**：
-`scripts/apiexe.py call --method savePassenger --arg '{"passengerName":"李四","identityNo":"420984198803017743","phoneNumber":"13000000000"}'`
-
-- 添加成功后，再次调用 `getPassengerList` 刷新列表，继续乘客选择流程。
-
-**乘客信息字段**：必填为姓名、身份证号、手机号；其余可选不传。
+- 保存成功后，再次获取乘客列表，继续让用户选择乘客。
 
 ---
 
 ### 第五阶段：下单占位
 
-调用 `flight.createOrder`。入参以 [api/plane.json](../api/plane.json) 为准，**按下列结构传参**：
+创建机票订单。入参以 [api/plane.json](../api/plane.json) 为准，**按文档结构传参**：
 
 **顶层必传**：memberId、userName（可空）、phoneNumber、email（可空）、orderSource（如 0）、orderType（如 0）、subOrderType（`FLIGHT_SINGLE`）、tripType（1 单程）、fromDate（YYYY-MM-DD）、returnDate（单程传空）、totalAmount、payAmount（= 票面+机建+燃油，如 970）、items、contact、departureCityId、destinationCityId。
 
@@ -248,13 +238,13 @@ HU9012 首都机场 14:00 → 虹桥机场 16:20  2h20m  ⚡ 价格优
 
 **departureCityId / destinationCityId**：出发地/目的地城市 id（字符串），如北京=4、上海=785，可从城市列表或业务约定取值。
 
-**重要**：创建订单成功后，订单处于**占位中**状态，此时**必须**进入第六阶段轮询订单状态，根据轮询结果再决定后续反馈，切勿直接提示用户支付。
+**重要**：订单创建成功后处于**占位中**，**必须**进入第六阶段轮询订单状态，根据结果再决定提示用户支付或失败重试，切勿未轮询就提示用户支付。
 
 ---
 
 ### 第六阶段：订单状态轮询（必执行）
 
-下单成功后，订单处于占位中，**必须**有限次数轮询 `getOrderStatus`，直到得到明确结果。必填字段 orderBaseId 从 flight.createOrder 返回的 data.orderBaseId 获取。
+下单成功后订单处于占位中，**必须**在有限次数内轮询订单状态，直到得到明确结果。轮询时使用的订单号从创建订单返回的 `data.orderBaseId` 或 `holdingDetailList[].orderBaseId` 获取。
 
 - **轮询间隔**：10 秒
 - **最大轮询次数**：6 次（最多等待约 1 分钟）
@@ -325,7 +315,7 @@ HU9012 首都机场 14:00 → 虹桥机场 16:20  2h20m  ⚡ 价格优
 
 ### 第八阶段：取消订单（可选）
 
-当用户表达取消机票订单意愿时，调用 `flight.cancelOrder`。必填字段 orderBaseId 按接口文档，缺则提示。
+当用户表达取消机票订单意愿时，执行取消订单。必填为订单号（orderBaseId），按 [api/plane.json](../api/plane.json) 文档，缺则向用户确认订单号。
 
 **场景**：用户想预订其他航班，需先取消当前未支付订单。
 
@@ -600,18 +590,18 @@ HU9012 首都机场 14:00 → 虹桥机场 16:20  2h20m  ⚡ 价格优
 
 ---
 
-## 接口清单与数据流
+## 步骤与数据对照（Agent 内部参考）
 
-| 阶段 | 接口 | 关键入参 | 关键出参 |
-|------|------|----------|----------|
-| 1 | cityList | domesticType、resourceType（机票：domesticType=1, resourceType=0） | cityId、flightCode |
-| 2 | flightListV2 | depCityId、arrCityId、fromCity、toCity、fromDate | goFlight.flights.extData |
-| 3 | cabinList | goExtData、backExtData、adultNum、childNum、cabinGrade（goExtData=goFlight.flights[].extData，单程 backExtData=""） | goFlightCabin.cabinList.resourceItemId |
-| 4 | getPassengerList | orderType | 乘客列表 |
-| 4 | savePassenger | passengerName、identityNo、phoneNumber（仅此三项必填） | 新增乘客 |
-| 5 | flight.createOrder | items.resourceItemId、passengers、contact 等 | orderBaseId |
-| 6 | getOrderStatus | orderBaseId | status |
-| 8 | flight.cancelOrder | orderBaseId | 取消结果 |
+| 阶段 | 步骤说明 | 关键入参 | 关键出参 |
+|------|----------|----------|----------|
+| 1 | 获取城市列表 | domesticType、resourceType（机票：1, 0） | cityId、flightCode |
+| 2 | 查询航班列表 | depCityId、arrCityId、fromCity、toCity、fromDate | goFlight.flights.extData |
+| 3 | 查询舱位详情 | goExtData、backExtData、adultNum、childNum、cabinGrade | goFlightCabin.cabinList.resourceItemId |
+| 4 | 查询乘客列表 | orderType | 乘客列表 |
+| 4 | 保存乘客 | passengerName、identityNo、phoneNumber | 新增乘客 |
+| 5 | 创建订单 | items.resourceItemId、passengers、contact 等 | orderBaseId |
+| 6 | 查询订单状态 | orderBaseId | status |
+| 8 | 取消订单 | orderBaseId | 取消结果 |
 | 9 | orderHistory | memberId | 订单历史列表 |
 | 10 | orderDetail | orderBaseId | 订单详情 |
 | 11 | orderDeduct | orderBaseId、resourceType=1、refundType、deductItemList | 核损结果（含手续费、退款金额等） |
@@ -623,7 +613,7 @@ HU9012 首都机场 14:00 → 虹桥机场 16:20  2h20m  ⚡ 价格优
 
 ### 核心原则
 
-**当 API 调用异常时，不要让用户重复提供信息！**
+**当后台请求异常时，不要让用户重复提供信息！**
 
 用户已经选择的内容必须记住：
 - ✅ 出发地和目的地
@@ -634,7 +624,9 @@ HU9012 首都机场 14:00 → 虹桥机场 16:20  2h20m  ⚡ 价格优
 
 ### 常见错误处理
 
-**1. 接口返回异常**
+**1. 后台返回异常**
+
+向用户展示示例（勿出现「接口」「API」等词）：
 
 ```
 ❌ 获取航班详情时遇到系统异常
@@ -693,9 +685,9 @@ CA1234 经济舱暂时无票，但还有以下选择：
 ✅ **友好自然**：「好的，我来帮您查询北京到上海的航班！」
 ❌ **机械生硬**：「请提供出发城市、到达城市和出发日期。」
 
-### 接口返回结果润色（重要）
+### 后台返回结果润色（重要）
 
-收到接口返回后，**不要直接原样输出**，应对结果进行润色展示：
+收到后台返回后，**不要直接原样输出**，应润色成用户可读的文案：
 
 - **使用符号**：✈️ 💺 👥 📋 💰 ⏰ ✅ ❌ ⚠️ 等增强可读性
 - **一行一行展示**：每条信息单独一行，**勿用表格、框线**（`│` `├` `┌` `└` 等），避免在不同界面展示错乱
@@ -755,9 +747,9 @@ CA1234 经济舱暂时无票，但还有以下选择：
 
 用户: 张三
 
-（若用户说「我要添加新乘客」「没有合适的人」等，则调用 savePassenger，仅收集必填三项：姓名、身份证号、手机号，添加成功后再展示乘客列表供选择）
+（内部：若用户说「我要添加新乘客」「没有合适的人」等，则先收集姓名、身份证号、手机号并保存乘客，再展示乘客列表供选择。）
 
-（调用 flight.createOrder 后，必须轮询 getOrderStatus，直到 status=12 占位完成）
+（内部：创建订单后必须轮询订单状态，直到占位完成或失败/超时。）
 
 助手: 🎉 占位成功！座位已为您预留
 
@@ -773,9 +765,9 @@ CA1234 经济舱暂时无票，但还有以下选择：
 
 ---
 
-## 接口调用方式
+## 执行方式（Agent 内部）
 
-Agent 识别用户意图后，查阅 [api/plane.json](../api/plane.json) 选择 method，按 `parameters` 构造 params，执行 `scripts/apiexe.py call --method <method> --arg '<params_json>'`。每次调用自动携带 auth 签名。tools/call 入参结构为：`method`（含 category、subCategory、action）、`params`、`auth`。
+识别用户意图后，查阅 [api/plane.json](../api/plane.json) 选择对应 method，按 `parameters` 构造 params，使用 `scripts/apiexe.py call --method <method> --arg '<params_json>'` 或 `--arg-file` 执行。**以上为内部执行方式，对用户只说业务话术（如「正在为您查询」「正在占位」），不得出现接口名、API、method 等。**
 
 ## 多资源场景
 
