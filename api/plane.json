@@ -3,8 +3,8 @@
     "method": "cityList",
     "description": "城市列表",
     "category": "RESOURCE",
-    "subCategory": "CITY",
-    "action": "SEARCH",
+    "subCategory": "COMMON",
+    "action": "CITY",
     "parameters": {
       "type": "object",
       "properties": {
@@ -266,7 +266,7 @@
   {
     "method": "flight.createOrder",
     "description": "创建机票订单",
-    "category": "RESOURCE",
+    "category": "ORDER",
     "subCategory": "FLIGHT",
     "action": "BOOK",
     "parameters": {
@@ -417,8 +417,8 @@
     "method": "getOrderStatus",
     "description": "获取订单状态",
     "category": "ORDER",
-    "subCategory": "COMMON",
-    "action": "SEARCH",
+    "subCategory": "FLIGHT",
+    "action": "STATUS",
     "parameters": {
       "type": "object",
       "properties": {
@@ -434,7 +434,7 @@
     "method": "flight.cancelOrder",
     "description": "取消机票订单",
     "category": "ORDER",
-    "subCategory": "COMMON",
+    "subCategory": "FLIGHT",
     "action": "CANCEL",
     "parameters": {
       "type": "object",
