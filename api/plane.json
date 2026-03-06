@@ -456,5 +456,156 @@
         "orderBaseId"
       ]
     }
+  },
+  {
+    "method": "orderHistory",
+    "description": "获取机票订单历史列表",
+    "category": "ORDER",
+    "subCategory": "FLIGHT",
+    "action": "HISTORY",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "memberId": {
+          "type": "string",
+          "description": "会员ID"
+        }
+      },
+      "required": ["memberId"]
+    }
+  },
+  {
+    "method": "orderDeduct",
+    "description": "机票订单核损（退票前必调）",
+    "category": "ORDER",
+    "subCategory": "FLIGHT",
+    "action": "Deduct",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "orderBaseId": {
+          "type": "string",
+          "description": "订单编号"
+        },
+        "resourceType": {
+          "type": "integer",
+          "description": "资源类型，默认1（机票）"
+        },
+        "refundType": {
+          "type": "integer",
+          "description": "退款类型 1-整单退 2-部分退"
+        },
+        "applyType": {
+          "type": "integer",
+          "description": "退款类型 0-自愿退票 1-非自愿退票，默认0"
+        },
+        "reason": {
+          "type": "string",
+          "description": "退票原因"
+        },
+        "reasonType": {
+          "type": "integer",
+          "description": "原因类型"
+        },
+        "deductItemList": {
+          "type": "array",
+          "description": "核损项目列表（必填）",
+          "items": {
+            "type": "object",
+            "properties": {
+              "orderItemNo": {
+                "type": "string",
+                "description": "订单项编号（order item no）"
+              },
+              "passengerIdList": {
+                "type": "array",
+                "description": "需要退票的乘客ID列表（必填）",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": ["orderItemNo", "passengerIdList"]
+          }
+        }
+      },
+      "required": ["orderBaseId", "resourceType", "refundType", "deductItemList"]
+    }
+  },
+  {
+    "method": "flight.refund",
+    "description": "申请机票退票",
+    "category": "ORDER",
+    "subCategory": "FLIGHT",
+    "action": "REFUND",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "orderBaseId": {
+          "type": "string",
+          "description": "订单号"
+        },
+        "orderType": {
+          "type": "integer",
+          "description": "订单类型，默认1"
+        },
+        "applyType": {
+          "type": "integer",
+          "description": "申请类型，默认1"
+        },
+        "refundType": {
+          "type": "integer",
+          "description": "退票类型 1-全额退票（全退） 2-部分退票（部分乘客退）"
+        },
+        "amount": {
+          "type": "number",
+          "description": "退款金额"
+        },
+        "refundReason": {
+          "type": "string",
+          "description": "退票原因"
+        },
+        "refundItemList": {
+          "type": "array",
+          "description": "退票明细列表",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ticketId": {
+                "type": "string",
+                "description": "票号（必填）"
+              },
+              "passengerId": {
+                "type": "integer",
+                "description": "乘客ID（必填）"
+              },
+              "passengerName": {
+                "type": "string",
+                "description": "乘客姓名（必填）"
+              }
+            },
+            "required": ["ticketId", "passengerId", "passengerName"]
+          }
+        }
+      },
+      "required": ["orderBaseId", "orderType", "applyType", "refundType", "amount", "refundItemList"]
+    }
+  },
+  {
+    "method": "orderDetail",
+    "description": "获取订单详情",
+    "category": "ORDER",
+    "subCategory": "COMMON",
+    "action": "DETAIL",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "orderBaseId": {
+          "type": "string",
+          "description": "订单号"
+        }
+      },
+      "required": ["orderBaseId"]
+    }
   }
 ]
