@@ -3,8 +3,8 @@
     "method": "cityList",
     "description": "城市列表",
     "category": "RESOURCE",
-    "subCategory": "CITY",
-    "action": "SEARCH",
+    "subCategory": "FLIGHT",
+    "action": "CITY",
     "parameters": {
       "type": "object",
       "properties": {
