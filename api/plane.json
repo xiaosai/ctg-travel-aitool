@@ -1,0 +1,460 @@
+[
+  {
+    "method": "cityList",
+    "description": "城市列表",
+    "category": "RESOURCE",
+    "subCategory": "CITY",
+    "action": "SEARCH",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "domesticType": {
+          "type": "integer",
+          "description": "国内/国际类型 默认国内 1：国内 2：国际"
+        },
+        "resourceType":{
+          "type": "integer",
+          "description": "资源类型 (默认0；飞机=0, 酒店=1, 火车=2, 门票=3)"
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "method": "flightListV2",
+    "description": "航班列表查询",
+    "category": "RESOURCE",
+    "subCategory": "FLIGHT",
+    "action": "SEARCH",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "cabinGrade": {
+          "type": "integer",
+          "description": "舱位等级，0-不限 1-经济舱/超级经济舱，2-商务舱/头等舱"
+        },
+        "adultNum": {
+          "type": "integer",
+          "description": "成人数量"
+        },
+        "childNum": {
+          "type": "integer",
+          "description": "儿童数量"
+        },
+        "fromCity": {
+          "type": "string",
+          "description": "出发地"
+        },
+        "fromCityType": {
+          "type": "integer",
+          "description": "出发地类型，1-机场；2-城市"
+        },
+        "fromDate": {
+          "type": "string",
+          "description": "出发日期，格式 YYYYMMDD，如 20260306"
+        },
+        "retDate": {
+          "type": "string",
+          "description": "回程日期，格式 YYYYMMDD，如 20260306"
+        },
+        "toCity": {
+          "type": "string",
+          "description": "目的地"
+        },
+        "toCityType": {
+          "type": "integer",
+          "description": "目的地类型，1-机场；2-城市"
+        },
+        "tripType": {
+          "type": "integer",
+          "description": "行程类型，1-单程;2-往返;3-多程"
+        },
+        "sortType": {
+          "type": "integer",
+          "description": "排序类型，1-默认优先直飞；2-时间；3-价格"
+        },
+        "sortOrder": {
+          "type": "integer",
+          "description": "排序方式，1-升序；2-降序"
+        },
+        "fromTimeRanges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "startTime": {
+                "type": "string",
+                "description": "时间段开始时间，格式 HH:mm"
+              },
+              "endTime": {
+                "type": "string",
+                "description": "时间段结束时间，格式 HH:mm"
+              }
+            }
+          },
+          "description": "出发时间段"
+        },
+        "toTimeRanges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "startTime": {
+                "type": "string",
+                "description": "时间段开始时间，格式 HH:mm"
+              },
+              "endTime": {
+                "type": "string",
+                "description": "时间段结束时间，格式 HH:mm"
+              }
+            }
+          },
+          "description": "到达时间段"
+        },
+        "directFlight": {
+          "type": "integer",
+          "description": "是否直飞，0-不限 1-直飞"
+        },
+        "bigModel": {
+          "type": "integer",
+          "description": "机型中含有（大）字样，0-不限 1-是"
+        },
+        "mediumModel": {
+          "type": "integer",
+          "description": "机型中含有（中）字样，0-不限 1-是"
+        },
+        "hiddeShareFlight": {
+          "type": "integer",
+          "description": "隐藏共享航班，0-不限 1-是"
+        },
+        "depAirports": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "出发机场"
+        },
+        "arrAirports": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "到达机场"
+        },
+        "airlines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "航司"
+        },
+        "entranceSource": {
+          "type": "integer",
+          "description": "入口 0-新旅行 1-疗休养"
+        }
+      },
+      "required": ["cabinGrade", "adultNum", "childNum", "fromCity", "fromCityType", "fromDate", "toCity", "toCityType", "tripType"]
+    }
+  },
+  {
+    "method": "cabinList",
+    "description": "航班详情舱位列表",
+    "category": "RESOURCE",
+    "subCategory": "FLIGHT",
+    "action": "DETAIL",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "goExtData": {
+          "type": "string",
+          "description": "去程扩展数据，取自航班列表接口 goFlight.flights[].extData"
+        },
+        "backExtData": {
+          "type": "string",
+          "description": "返程扩展数据，单程时传空字符串"
+        },
+        "adultNum": {
+          "type": "integer",
+          "description": "成人数量"
+        },
+        "childNum": {
+          "type": "integer",
+          "description": "儿童数量"
+        },
+        "cabinGrade": {
+          "type": "integer",
+          "description": "舱位等级，默认 0。0-不限 1-经济舱/超级经济舱，2-商务舱/头等舱"
+        }
+      },
+      "required": ["goExtData", "adultNum", "childNum", "cabinGrade"]
+    }
+  },
+  {
+    "method": "getPassengerList",
+    "description": "获取乘客信息列表",
+    "category": "PASSENGER",
+    "subCategory": "COMMON",
+    "action": "LIST",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "orderType": {
+          "type": "integer",
+          "description": "订单类型"
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "method": "savePassenger",
+    "description": "保存乘客信息",
+    "category": "PASSENGER",
+    "subCategory": "COMMON",
+    "action": "SAVE",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "passengerName": {
+          "type": "string",
+          "description": "旅客姓名（中文）"
+        },
+        "pinyinName": {
+          "type": "string",
+          "description": "姓名拼音，格式为 LI SI（姓与名大写、空格分隔）"
+        },
+        "passengerType": {
+          "type": "integer",
+          "description": "旅客类型，0-成人"
+        },
+        "gender": {
+          "type": "integer",
+          "description": "性别，1-男 2-女"
+        },
+        "birthday": {
+          "type": "string",
+          "description": "出生日期，格式 YYYY-MM-DD"
+        },
+        "identityType": {
+          "type": "string",
+          "description": "证件类型，ID-身份证"
+        },
+        "identityNo": {
+          "type": "string",
+          "description": "证件号码"
+        },
+        "nationality": {
+          "type": "string",
+          "description": "国籍二字码，如 CN"
+        },
+        "phoneCountryCode": {
+          "type": "string",
+          "description": "手机区号，如 +86"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "手机号码"
+        },
+        "status": {
+          "type": "integer",
+          "description": "状态，0-已删除 1-有效"
+        }
+      },
+      "required": ["passengerName", "identityNo", "phoneNumber"]
+    }
+  },
+  {
+    "method": "flight.createOrder",
+    "description": "创建机票订单",
+    "category": "RESOURCE",
+    "subCategory": "FLIGHT",
+    "action": "BOOK",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "memberId": {
+          "type": "string",
+          "description": "会员编号"
+        },
+        "userName": {
+          "type": "string",
+          "description": "下单用户名称"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "下单用户手机号码"
+        },
+        "distributor": {
+          "type": "integer",
+          "description": "分销商(0-NBS)"
+        },
+        "orderSource": {
+          "type": "integer",
+          "description": "订单来源(0-APP，1-小程序，2-中移动 3-B转C疗休养)"
+        },
+        "email": {
+          "type": "string",
+          "description": "下单人邮箱"
+        },
+        "orderType": {
+          "type": "integer",
+          "description": "订单类型"
+        },
+        "subOrderType": {
+          "type": "string",
+          "description": "子订单类型，如 FLIGHT_SINGLE"
+        },
+        "serviceFee": {
+          "type": "number",
+          "description": "服务费"
+        },
+        "contact": {
+          "type": "object",
+          "description": "联系人信息，字段可传空字符串",
+          "properties": {
+            "address": { "type": "string", "description": "地址" },
+            "email": { "type": "string", "description": "邮箱" },
+            "name": { "type": "string", "description": "联系人姓名" },
+            "phone": { "type": "string", "description": "联系人手机号" },
+            "postcode": { "type": "string", "description": "邮编" }
+          }
+        },
+        "tripType": {
+          "type": "integer",
+          "description": "行程类型 1-单程 2-往返 3-多程"
+        },
+        "fromDate": {
+          "type": "string",
+          "description": "出发日期，格式 YYYY-MM-DD"
+        },
+        "returnDate": {
+          "type": "string",
+          "description": "返程日期，单程可传空字符串"
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "总金额（如 票面+机建+燃油=970）"
+        },
+        "payAmount": {
+          "type": "number",
+          "description": "支付总金额"
+        },
+        "departureCityId": {
+          "type": "string",
+          "description": "出发城市id，如 4"
+        },
+        "destinationCityId": {
+          "type": "string",
+          "description": "目的地城市id，如 785"
+        },
+        "items": {
+          "type": "array",
+          "description": "预定资源明细列表",
+          "items": {
+            "type": "object",
+            "properties": {
+              "resourceItemId": { "type": "string", "description": "资源项id，取自 cabinList" },
+              "goExtData": { "type": "string", "description": "舱位详情中的 extData 整段 JSON 字符串" },
+              "adultNum": { "type": "integer", "description": "成人数量" },
+              "childNum": { "type": "integer", "description": "儿童数量" },
+              "sessionId": { "type": "string", "description": "cabinList 返回的 sessionId" },
+              "adultSalePrice": { "type": "number", "description": "成人销售价" },
+              "adultAirportFee": { "type": "number", "description": "成人机建费" },
+              "adultOilFee": { "type": "number", "description": "成人燃油费" },
+              "childSalePrice": { "type": "number", "description": "儿童票面价" },
+              "childAirportFee": { "type": "number", "description": "儿童机建费" },
+              "childOilFee": { "type": "number", "description": "儿童燃油费" },
+              "cabinGrade": { "type": "integer", "description": "舱位等级 1-经济舱 2-商务/头等" },
+              "passengers": {
+                "type": "array",
+                "description": "乘客列表，取自 getPassengerList 选中项",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "passengerId": { "type": "integer", "description": "出行人id" },
+                    "name": { "type": "string", "description": "姓名" },
+                    "idNumber": { "type": "string", "description": "证件号" },
+                    "idType": { "type": "string", "description": "证件类型如 ID" },
+                    "phoneNumber": { "type": "string", "description": "手机号" },
+                    "customerType": { "type": "string", "description": "0-成人" },
+                    "birthday": { "type": "string", "description": "生日 YYYY-MM-DD" },
+                    "gender": { "type": "string", "description": "可空" },
+                    "nationality": { "type": "string", "description": "可空" },
+                    "pinyinname": { "type": "string", "description": "可空" }
+                  }
+                }
+              },
+              "departCityName": { "type": "string", "description": "出发城市名如北京" },
+              "departCityCode": { "type": "string", "description": "出发城市码如 BJS" },
+              "arriveCityName": { "type": "string", "description": "到达城市名如上海" },
+              "arriveCityCode": { "type": "string", "description": "到达城市码如 SHA" },
+              "quantity": { "type": "integer", "description": "数量 1" },
+              "rangeType": { "type": "integer", "description": "航程类型 1-去程 2-返程" },
+              "contact": {
+                "type": "object",
+                "description": "本段联系人，字段可空",
+                "properties": {
+                  "address": { "type": "string" },
+                  "email": { "type": "string" },
+                  "name": { "type": "string" },
+                  "phone": { "type": "string" },
+                  "postcode": { "type": "string" }
+                }
+              },
+              "departureDate": { "type": "string", "description": "出发日期 YYYY-MM-DD" },
+              "departureTime": { "type": "string", "description": "起飞时间如 07:25" },
+              "flightNumber": { "type": "string", "description": "航班号如 HU7601" },
+              "departureCityName": { "type": "string", "description": "出发城市名" },
+              "arrivalCityName": { "type": "string", "description": "到达城市名" }
+            }
+          }
+        }
+      },
+      "required": ["memberId", "phoneNumber", "orderSource", "orderType", "subOrderType", "tripType", "fromDate", "totalAmount", "payAmount", "items", "contact", "departureCityId", "destinationCityId"]
+    }
+  },
+  {
+    "method": "getOrderStatus",
+    "description": "获取订单状态",
+    "category": "ORDER",
+    "subCategory": "COMMON",
+    "action": "SEARCH",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "orderBaseId": {
+          "type": "string",
+          "description": "订单号"
+        }
+      },
+      "required": ["orderBaseId"]
+    }
+  },
+  {
+    "method": "flight.cancelOrder",
+    "description": "取消机票订单",
+    "category": "ORDER",
+    "subCategory": "COMMON",
+    "action": "CANCEL",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "orderBaseId": {
+          "type": "string",
+          "description": "订单ID"
+        },
+        "cancelReason": {
+          "type": "string",
+          "description": "取消原因"
+        },
+        "terminalCode": {
+          "type": "string",
+          "description": "终端类型，如 APP"
+        }
+      },
+      "required": [
+        "orderBaseId"
+      ]
+    }
+  }
+]

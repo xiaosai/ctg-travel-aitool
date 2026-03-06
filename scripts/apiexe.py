@@ -1,0 +1,196 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+旅游项目统一接口调用脚本（auth 签名版）
+根据 api/*.json 中的接口描述，由 Agent 识别用户意图后选择对应 method，传入 params 执行调用。
+每次调用时自动构造 auth（key、timestamp、nonce、signature。
+"""
+
+import argparse
+import base64
+import hmac
+import hashlib
+import json
+import random
+import sys
+import time
+from pathlib import Path
+
+SKILL_ROOT = Path(__file__).resolve().parent.parent
+CONFIG_FILE = SKILL_ROOT / "config" / "ctgConfig.json"
+API_DIR = SKILL_ROOT / "api"
+
+
+def load_config():
+    if not CONFIG_FILE.exists():
+        raise FileNotFoundError(f"配置文件不存在: {CONFIG_FILE}")
+    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+        cfg = json.load(f)
+    if not cfg.get("callUrl") and not cfg.get("host"):
+        raise ValueError("请在 config/ctgConfig.json 中配置 callUrl 或 host")
+    return cfg
+
+
+def get_call_url(config):
+    if config.get("callUrl"):
+        return config["callUrl"].rstrip("/")
+    host = config.get("host", "")
+    base = host if host.startswith("http") else f"http://{host}"
+    return base.rstrip("/") + "/openapi/tools/call"
+
+
+def compute_signature(secret_key, method_part, params_part, timestamp, nonce):
+    """计算 HMAC-SHA256 + Base64 签名"""
+    method_json = json.dumps(method_part, separators=(",", ":"), ensure_ascii=False)
+    params_json = json.dumps(params_part, separators=(",", ":"), ensure_ascii=False)
+    sign_data = f"{method_json}|{params_json}|{timestamp}|{nonce}"
+    signature = hmac.new(
+        secret_key.encode("utf-8"),
+        sign_data.encode("utf-8"),
+        hashlib.sha256,
+    ).digest()
+    return base64.b64encode(signature).decode("utf-8")
+
+
+def build_payload(config, method_part, params_part):
+    """构造完整请求体：method + params + auth"""
+    timestamp = int(time.time() * 1000)
+    nonce = random.randint(1, 100)
+    api_key = config.get("apiKey", "")
+    secret = config.get("secret", "")
+    signature = compute_signature(secret, method_part, params_part, timestamp, nonce)
+    auth_part = {
+        "key": api_key,
+        "timestamp": timestamp,
+        "nonce": nonce,
+        "signature": signature,
+    }
+    return {
+        "method": method_part,
+        "params": params_part,
+        "auth": auth_part,
+    }
+
+
+def api_call(url, payload, timeout=30):
+    import urllib.request
+    import urllib.error
+
+    data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    headers = {"Content-Type": "application/json"}
+    req = urllib.request.Request(url, data=data, method="POST", headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="ignore")
+        try:
+            err_data = json.loads(body)
+            raise Exception(err_data.get("message", body) or f"HTTP {e.code}")
+        except json.JSONDecodeError:
+            raise Exception(f"HTTP {e.code}: {body}")
+    except urllib.error.URLError as e:
+        raise Exception(f"网络错误: {e.reason}")
+    except Exception as e:
+        raise Exception(str(e))
+
+
+def load_api_definitions(api_file=None):
+    definitions = []
+    if api_file:
+        path = SKILL_ROOT / api_file if not Path(api_file).is_absolute() else Path(api_file)
+        if path.exists():
+            with open(path, "r", encoding="utf-8") as f:
+                definitions.extend(json.load(f))
+    else:
+        for f in API_DIR.glob("*.json"):
+            if f.name == "auth.json":
+                continue
+            with open(f, "r", encoding="utf-8") as fp:
+                definitions.extend(json.load(fp))
+    return definitions
+
+
+def find_method_by_method(definitions, method):
+    """根据 method 查找对应的 category、subCategory、action（从接口定义顶层读取）"""
+    for d in definitions:
+        if d.get("method") == method:
+            sub_cat = d.get("subCategory") or d.get("platform")
+            if "category" in d and sub_cat is not None and "action" in d:
+                return {
+                    "category": d["category"],
+                    "subCategory": sub_cat,
+                    "action": d["action"],
+                }
+            raise ValueError(f"接口 {method} 缺少 category/subCategory(或 platform)/action 定义")
+    raise ValueError(f"未找到接口定义: {method}")
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="接口调用：每次调用自动构造 auth 签名，无需 loginToken",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+使用方式:
+  call: 调用业务接口，自动携带 auth 签名
+    %(prog)s call --method search_trains --arg "{\"fromStation\":\"武汉\",\"toStation\":\"长沙\",\"ticketDate\":\"2026-03-08\"}"
+
+  list: 列出 api 中的 method 定义
+    %(prog)s list
+        """,
+    )
+    subparsers = parser.add_subparsers(dest="command", help="命令")
+
+    call_p = subparsers.add_parser("call", help="调用指定 method")
+    call_p.add_argument("--method", required=True, help="接口 method，如 search_trains")
+    call_p.add_argument("--arg", default="{}", help="业务参数 JSON")
+    call_p.add_argument("--arg-file", help="从文件读取业务参数 JSON")
+
+    list_p = subparsers.add_parser("list", help="列出 method 定义")
+    list_p.add_argument("--api", help="指定 api 文件，如 api/train.json")
+
+    args = parser.parse_args()
+    if not args.command:
+        parser.print_help()
+        sys.exit(1)
+
+    try:
+        config = load_config()
+    except Exception as e:
+        print(f"❌ {e}", file=sys.stderr)
+        sys.exit(1)
+
+    if args.command == "list":
+        definitions = load_api_definitions(getattr(args, "api", None))
+        print(json.dumps(definitions, ensure_ascii=False, indent=2))
+        sys.exit(0)
+
+    if args.arg_file:
+        with open(args.arg_file, "r", encoding="utf-8") as f:
+            params_part = json.load(f)
+    else:
+        try:
+            params_part = json.loads(args.arg)
+        except json.JSONDecodeError as e:
+            print(f"❌ --arg 不是合法 JSON: {e}", file=sys.stderr)
+            sys.exit(1)
+
+    definitions = load_api_definitions()
+    try:
+        method_part = find_method_by_method(definitions, args.method)
+    except ValueError as e:
+        print(f"❌ {e}", file=sys.stderr)
+        sys.exit(1)
+
+    payload = build_payload(config, method_part, params_part)
+    url = get_call_url(config)
+    try:
+        result = api_call(url, payload)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    except Exception as e:
+        print(f"❌ {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

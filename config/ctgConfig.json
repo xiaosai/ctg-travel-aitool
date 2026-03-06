@@ -1,0 +1,5 @@
+{
+  "apiKey": "test-api",
+  "secret": "test-secret",
+  "callUrl": "http://127.0.0.1:8080/openapi/tools/call"
+}
