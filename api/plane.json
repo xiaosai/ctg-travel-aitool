@@ -443,6 +443,10 @@
           "type": "string",
           "description": "订单ID"
         },
+        "orderType": {
+          "type": "integer",
+          "description": "订单类型，默认0（机票）"
+        },
         "cancelReason": {
           "type": "string",
           "description": "取消原因"
