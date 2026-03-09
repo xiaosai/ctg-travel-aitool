@@ -486,7 +486,7 @@
     "description": "机票订单核损（退票前必调）",
     "category": "ORDER",
     "subCategory": "COMMON",
-    "action": "Deduct",
+    "action": "DEDUCT",
     "parameters": {
       "type": "object",
       "properties": {
