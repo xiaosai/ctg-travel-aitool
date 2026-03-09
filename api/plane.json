@@ -410,14 +410,17 @@
           }
         }
       },
-      "required": ["memberId", "phoneNumber", "orderSource", "orderType", "subOrderType", "tripType", "fromDate", "totalAmount", "payAmount", "items", "contact", "departureCityId", "destinationCityId"]
+      "required": ["memberId", "phoneNumber", "orderSource", "orderType", "subOrderType", "tripType", "fromDate", "totalAmount", "payAmount", "items", "contact", "departureCityId", "destinationCityId"
+      , "resourceItemId","sessionId","goExtData","adultNum","childNum","adultSalePrice","adultAirportFee","adultOilFee","childSalePrice","childAirportFee",
+        "childOilFee","cabinGrade"
+      ]
     }
   },
   {
     "method": "getOrderStatus",
     "description": "获取订单状态",
     "category": "ORDER",
-    "subCategory": "FLIGHT",
+    "subCategory": "COMMON",
     "action": "STATUS",
     "parameters": {
       "type": "object",
@@ -434,7 +437,7 @@
     "method": "flight.cancelOrder",
     "description": "取消机票订单",
     "category": "ORDER",
-    "subCategory": "FLIGHT",
+    "subCategory": "COMMON",
     "action": "CANCEL",
     "parameters": {
       "type": "object",
@@ -482,7 +485,7 @@
     "method": "orderDeduct",
     "description": "机票订单核损（退票前必调）",
     "category": "ORDER",
-    "subCategory": "FLIGHT",
+    "subCategory": "COMMON",
     "action": "Deduct",
     "parameters": {
       "type": "object",

@@ -94,6 +94,27 @@
 
 **请求参数（机票场景）**：以 [api/plane.json](../api/plane.json) 为准，国内机票入参示例：`domesticType=1`、`resourceType=0`。具体见 api 文档。
 
+### 🔧 Python 调用命令
+
+**命令格式（cmd）**：
+```bash
+python scripts/apiexe.py call --method cityList --arg "{\"domesticType\": 1, \"resourceType\": 0}"
+```
+
+**命令格式（PowerShell）**：
+```powershell
+python scripts/apiexe.py call --method cityList --arg-file temp/citylist_params.json
+```
+
+**参数说明**：
+- `domesticType`: 国内/国际类型，默认国内 1（国内）2（国际）
+- `resourceType`: 资源类型，默认 0（飞机=0, 酒店=1, 火车=2, 门票=3）
+
+**注意事项**：
+- cmd 执行前需先切换到项目目录
+- JSON 参数中的双引号在 cmd 中需要转义为 `\"`
+- PowerShell 使用 `--arg-file` 可以避免参数转义问题
+
 **对用户的说法**（自然询问，不要机械填表）：
 
 ```
@@ -132,6 +153,28 @@
 - `adultNum`、`childNum`：成人/儿童数量
 - `tripType`：行程类型（1-单程，2-往返，3-多程）
 - `fromCityType`、`toCityType`：1-机场，2-城市
+
+### 🔧 Python 调用命令
+
+**命令格式（cmd）**：
+```bash
+python scripts/apiexe.py call --method flightListV2 --arg "{\"cabinGrade\": 0, \"adultNum\": 1, \"childNum\": 0, \"fromCity\": \"WUH\", \"fromCityType\": 2, \"fromDate\": \"20260311\", \"toCity\": \"SHA\", \"toCityType\": 2, \"tripType\": 1}"
+```
+
+**命令格式（PowerShell）**：
+```powershell
+python scripts/apiexe.py call --method flightListV2 --arg-file temp/flightlist_params.json
+```
+
+**关键参数说明**：
+- `fromCity`、`toCity`: 出发地/目的地城市代码（如 WUH 武汉、SHA 上海）
+- `fromDate`: 出发日期，格式 YYYYMMDD（如 20260311）
+- `tripType`: 行程类型（1-单程，2-往返，3-多程）
+- `adultNum`、`childNum`: 成人/儿童数量
+
+**注意事项**：
+- `fromDate` 格式必须为 YYYYMMDD，无横杠
+- `fromCityType`、`toCityType`: 1-机场，2-城市（建议用2-城市）
 
 **展示格式示例**（接口返回后润色展示，一行一行展示，勿用表格）：
 
@@ -177,14 +220,35 @@ HU9012 首都机场 14:00 → 虹桥机场 16:20  2h20m  ⚡ 价格优
 
 从返回中获取 `goFlightCabin.cabinList.resourceItemId`、各舱位价格、余票，供下单使用。
 
-**展示格式示例**（将后台结果润色后这样展示给用户，一行一行，勿用表格）：
+### 🔧 Python 调用命令
+
+**命令格式（cmd）**：
+```bash
+python scripts/apiexe.py call --method cabinList --arg "{\"goExtData\": \"73026665108161745-1\", \"backExtData\": \"\", \"adultNum\": 1, \"childNum\": 0, \"cabinGrade\": 0}"
+```
+
+**命令格式（PowerShell）**：
+```powershell
+python scripts/apiexe.py call --method cabinList --arg-file temp/cabinlist_params.json
+```
+
+**关键参数说明**：
+- `goExtData`: 航班列表返回的 `goFlight.flights[].extData`（航班列表中的短码）
+- `backExtData`: 返程扩展数据，单程传空字符串 `""`
+- `cabinGrade`: 舱位等级，0-不限，1-经济舱/超级经济舱，2-商务舱/头等舱
+
+**注意事项**：
+- `goExtData` 取自航班列表，是短码格式（如 "73026665108161745-1"）
+- 下单时用的是舱位详情中的 `goFlightCabin.cabinList[].extData`（整段 JSON 字符串），注意区分
+
+**展示格式示例**（将后台结果润色后这样展示给用户，一行一行展示，勿用表格）：
 
 ```
 💺 CA1234 可选舱位
 
   ① 经济舱  ¥680  剩余 9 张  适合大多数出行
   ② 超级经济舱  ¥880  剩余 5 张  更宽敞舒适
-  ③ 公务舱  ¥1980  剩余  3 张  顶级体验
+  ③ 公务舱  ¥1980  剩余 3 张  顶级体验
 
 请选择舱位类型（如：经济舱、公务舱）
 ```
@@ -195,7 +259,22 @@ HU9012 首都机场 14:00 → 虹桥机场 16:20  2h20m  ⚡ 价格优
 
 获取乘客列表，必填项按 [api/plane.json](../api/plane.json)，缺则向用户自然追问。机票场景需传 `orderType`（机票订单类型）。
 
-**展示格式示例**（将后台结果润色后这样展示给用户，一行一行，勿用表格）：
+### 🔧 Python 调用命令
+
+**命令格式（cmd）**：
+```bash
+python scripts/apiexe.py call --method getPassengerList --arg "{\"orderType\": 0}"
+```
+
+**命令格式（PowerShell）**：
+```powershell
+python scripts/apiexe.py call --method getPassengerList --arg-file temp/passengerlist_params.json
+```
+
+**参数说明**：
+- `orderType`: 订单类型，默认 0（机票）
+
+**展示格式示例**（将后台结果润色后这样展示给用户，一行一行展示，勿用表格）：
 
 ```
 👥 请选择乘客（可多选）
@@ -211,6 +290,18 @@ HU9012 首都机场 14:00 → 虹桥机场 16:20  2h20m  ⚡ 价格优
 ```
 
 **乘客列表为空时**：用自然话术提示用户添加乘客（如「还没有常用乘客，请先填写一位出行人信息」），收集姓名、身份证号、手机号三项后发起保存乘客请求。
+
+### 🔧 Python 调用命令 - 新增乘客
+
+**命令格式（cmd）**：
+```bash
+python scripts/apiexe.py call --method savePassenger --arg "{\"passengerName\": \"张三\", \"identityType\": \"ID\", \"identityNo\": \"420102199007015297\", \"phoneNumber\": \"15629199695\"}"
+```
+
+**命令格式（PowerShell）**：
+```powershell
+python scripts/apiexe.py call --method savePassenger --arg-file temp/savepassenger_params.json
+```
 
 **保存乘客必填项**（以 [api/plane.json](../api/plane.json) 为准）：旅客姓名、证件/身份证号、手机号码。其他字段可选不传。
 
@@ -241,6 +332,31 @@ HU9012 首都机场 14:00 → 虹桥机场 16:20  2h20m  ⚡ 价格优
 
 **重要**：订单创建成功后处于**占位中**，**必须**进入第六阶段轮询订单状态，根据结果再决定提示用户支付或失败重试，切勿未轮询就提示用户支付。
 
+### 🔧 Python 调用命令
+
+**命令格式（cmd）**：
+```bash
+python scripts/apiexe.py call --method flight.createOrder --arg "{\"memberId\": \"15d6676f6be54d5099b106abeeecfcd6\", \"userName\": \"\", \"phoneNumber\": \"15000000000\", \"distributor\": 0, \"orderSource\": 0, \"email\": \"\", \"orderType\": 0, \"subOrderType\": \"FLIGHT_SINGLE\", \"serviceFee\": 0, \"contact\": {\"address\": \"\", \"email\": \"\", \"name\": \"\", \"phone\": \"15000000000\", \"postcode\": \"\"}, \"tripType\": 1, \"fromDate\": \"2026-03-11\", \"returnDate\": \"\", \"totalAmount\": 479, \"payAmount\": 479, \"departureCityId\": \"1669\", \"destinationCityId\": \"785\", \"items\": [{\"resourceItemId\": \"FGde8bd5d6e73e43f7897e302b039c0f36\", \"goExtData\": \"{\\\"flightInfoId\\\":\\\"SXBHVy1Jb3BHdHR2SEJOSUNHWHRMSC10SklvR\\\",\\\"flightParam\\\":\\\"wC08Hw9V+ojuUDcPW1CoS7Y0yNQ/\\\",\\\"priceInfoId\\\":\\\"i9_3_4{G}5{631}8{CN_KM_ZHIVCGW}9{Gv4PJHk3qt||}0{}1{}2{}43{}44{}46{GCEB}47{}48{}49{}40{},prnve-aqp-qbzrfgvp,742.3!742.3\\\"}\", \"adultNum\": 1, \"childNum\": 0, \"sessionId\": \"EPVO73027446302667965\", \"adultSalePrice\": 419, \"adultAirportFee\": 50, \"adultOilFee\": 10, \"childSalePrice\": 0, \"childAirportFee\": 0, \"childOilFee\": 0, \"cabinGrade\": 1, \"passengers\": [{\"passengerId\": 399, \"name\": \"周刘\", \"idNumber\": \"420984199802090112\", \"idType\": \"ID\", \"phoneNumber\": \"15000000000\", \"customerType\": \"0\", \"birthday\": \"1998-02-09\", \"gender\": \"\", \"nationality\": \"\", \"pinyinname\": \"\"}], \"departCityName\": \"武汉\", \"departCityCode\": \"WUH\", \"arriveCityName\": \"上海\", \"arriveCityCode\": \"SHA\", \"quantity\": 1, \"rangeType\": 1, \"contact\": {\"address\": \"\", \"email\": \"\", \"name\": \"\", \"phone\": \"15000000000\", \"postcode\": \"\"}, \"departureDate\": \"2026-03-11\", \"departureTime\": \"08:05\", \"flightNumber\": \"MU2503\", \"departureCityName\": \"武汉\", \"arrivalCityName\": \"上海\"}]}"
+```
+
+**命令格式（PowerShell）**：
+```powershell
+python scripts/apiexe.py call --method flight.createOrder --arg-file temp/createorder_params.json
+```
+
+**关键参数说明**：
+- `totalAmount`、`payAmount`: 总金额（票面价+机建费+燃油费）
+- `sessionId`: 取自舱位详情的 `data.sessionId`
+- `goExtData`: 取自舱位详情的 `data.goFlightCabin.cabinList[].extData`（整段 JSON 字符串，需转义双引号）
+- `resourceItemId`: 取自舱位详情的`data.goFlightCabin.cabinList[].resourceItemId`
+- `child*Price`: 儿童票面价、机建费、燃油费取自舱位详情的`data.goFlightCabin.cabinList[].child*`
+
+**注意事项**：
+- `goExtData` 中的双引号在 cmd 中必须转义为 `\"`
+- 建议使用 `--arg-file` 参数文件方式，避免 cmd 转义问题
+- `sessionId` 必须放在 `items` 数组内的每个 `item` 对象中
+- 订单创建成功后会返回 `orderBaseId`，用于后续轮询订单状态
+
 ---
 
 ### 第六阶段：订单状态轮询（必执行）
@@ -258,6 +374,41 @@ HU9012 首都机场 14:00 → 虹桥机场 16:20  2h20m  ⚡ 价格优
 | `12` | 占位完成 | 进入第七阶段，展示成功反馈并提醒支付 |
 | `11` | 占位失败 | 进入第七阶段，展示失败反馈并引导重新预订 |
 | 超时 | 轮询 6 次仍为 10 | 告知「占位超时，请稍后查询订单状态」 |
+
+### 🔧 Python 调用命令
+
+**命令格式（cmd）**：
+```bash
+python scripts/apiexe.py call --method getOrderStatus --arg "{\"orderBaseId\": \"SRO202603091138018328863\"}"
+```
+
+**命令格式（PowerShell）**：
+```powershell
+python scripts/apiexe.py call --method getOrderStatus --arg-file temp/orderstatus_params.json
+```
+
+**参数说明**：
+- `orderBaseId`: 订单号（从创建订单返回获取）
+
+**轮询逻辑**：
+```python
+# 伪代码示例
+max_attempts = 6
+interval = 10  # 秒
+
+for i in range(max_attempts):
+    status = getOrderStatus(orderBaseId)
+    if status == 12:  # 占位完成
+        print("占位成功！")
+        break
+    elif status == 11:  # 占位失败
+        print("占位失败")
+        break
+    elif i == max_attempts - 1:  # 最后一次仍为处理中
+        print("占位超时")
+        break
+    time.sleep(interval)
+```
 
 ---
 
@@ -325,6 +476,24 @@ HU9012 首都机场 14:00 → 虹桥机场 16:20  2h20m  ⚡ 价格优
 2. 用户同意后执行取消
 3. 取消成功后继续新流程
 
+### 🔧 Python 调用命令
+
+**命令格式（cmd）**：
+```bash
+python scripts/apiexe.py call --method flight.cancelOrder --arg "{\"orderBaseId\": \"SRO202603091138018328863\", \"orderType\": 0, \"cancelReason\": \"不需要了\", \"terminalCode\": \"APP\"}"
+```
+
+**命令格式（PowerShell）**：
+```powershell
+python scripts/apiexe.py call --method flight.cancelOrder --arg-file temp/cancelorder_params.json
+```
+
+**参数说明**：
+- `orderBaseId`: 订单号（必填）
+- `orderType`: 订单类型，默认 0（机票）
+- `cancelReason`: 取消原因
+- `terminalCode`: 终端类型，如 "APP"
+
 **确认话术示例**（润色展示，一行一行展示，勿用表格）：
 
 ```
@@ -351,8 +520,20 @@ HU9012 首都机场 14:00 → 虹桥机场 16:20  2h20m  ⚡ 价格优
 - 用户说「最近买过的机票」
 - 用户说「订单历史」
 
-**调用参数**：
-- `memberId`：会员ID（从认证上下文中获取，通常无需询问）
+### 🔧 Python 调用命令
+
+**命令格式（cmd）**：
+```bash
+python scripts/apiexe.py call --method orderHistory --arg "{\"memberId\": \"15d6676f6be54d5099b106abeeecfcd6\"}"
+```
+
+**命令格式（PowerShell）**：
+```powershell
+python scripts/apiexe.py call --method orderHistory --arg-file temp/orderhistory_params.json
+```
+
+**参数说明**：
+- `memberId`: 会员ID（从认证上下文中获取，通常无需询问）
 
 **展示格式示例**（一行一行展示，勿用表格）：
 
@@ -392,8 +573,20 @@ HU9012 首都机场 14:00 → 虹桥机场 16:20  2h20m  ⚡ 价格优
 - 用户从订单历史中选择某个订单
 - 用户说「查询这个订单的情况」
 
-**调用参数**：
-- `orderBaseId`：订单号（如 FRO202603101234567890）
+### 🔧 Python 调用命令
+
+**命令格式（cmd）**：
+```bash
+python scripts/apiexe.py call --method orderDetail --arg "{\"orderBaseId\": \"FRO202603101234567890\"}"
+```
+
+**命令格式（PowerShell）**：
+```powershell
+python scripts/apiexe.py call --method orderDetail --arg-file temp/orderdetail_params.json
+```
+
+**参数说明**：
+- `orderBaseId`: 订单号（如 FRO202603101234567890）
 
 **展示格式示例**（一行一行展示，勿用表格）：
 
@@ -467,19 +660,32 @@ HU9012 首都机场 14:00 → 虹桥机场 16:20  2h20m  ⚡ 价格优
 
 **步骤5：核损（orderDeduct）**
 - 调用 `orderDeduct` 接口计算退票手续费和退款金额
-- **调用参数**：
-  - `orderBaseId`：订单号
-  - `resourceType`：默认传 1（机票）
-  - `refundType`：1-整单退 或 2-部分退
-  - `applyType`：默认传 0（自愿退票）
-  - `reason`：退票原因
-  - `deductItemList`：核损项目列表（必填），每项包含：
-    - `orderItemNo`：订单项编号（从订单详情获取）
-    - `passengerIdList`：需要退票的乘客ID列表
-      * 全额退票：包含订单中所有乘客ID
-      * 部分退票：只包含用户指定的乘客ID
 
-- **核损结果展示**（润色展示，一行一行展示，勿用表格）：
+### 🔧 Python 调用命令 - 核损
+
+**命令格式（cmd）**：
+```bash
+python scripts/apiexe.py call --method orderDeduct --arg "{\"orderBaseId\": \"SRO202603091138018328863\", \"resourceType\": 0, \"refundType\": 1, \"applyType\": 0, \"reason\": \"行程变更\", \"deductItemList\": [{\"orderItemNo\": \"OI202603091441449321207\", \"passengerIdList\": [\"399\"]}]}"
+```
+
+**命令格式（PowerShell）**：
+```powershell
+python scripts/apiexe.py call --method orderDeduct --arg-file temp/orderdeduct_params.json
+```
+
+**参数说明**：
+- `orderBaseId`: 订单号
+- `resourceType`: 资源类型，默认 0（机票）
+- `refundType`: 1-整单退，2-部分退
+- `applyType`: 0-自愿退票，1-非自愿退票，默认 0
+- `reason`: 退票原因
+- `deductItemList`: 核损项目列表（必填）
+  - `orderItemNo`: 订单项编号（从订单详情获取 取值`data.flightProductInfos.items[].orderItemNo`）
+  - `passengerIdList`: 需要退票的乘客ID列表
+    * 全额退票：包含订单中所有乘客ID
+    * 部分退票：只包含用户指定的乘客ID
+
+**核损结果展示**（润色展示，一行一行展示，勿用表格）：
 
 ```
 📊 核损结果
@@ -511,17 +717,30 @@ HU9012 首都机场 14:00 → 虹桥机场 16:20  2h20m  ⚡ 价格优
 
 **步骤7：提交退票申请（flight.refund）**
 - 调用 `flight.refund` 接口提交退票申请
-- **调用参数**：
-  - `orderBaseId`：订单号（必填）
-  - `orderType`：订单类型，默认传 1（必填）
-  - `applyType`：申请类型，默认传 1（必填）
-  - `refundType`：1-全额退票，2-部分退票（必填）
-  - `amount`：退款金额（必填，从核损结果获取）
-  - `refundReason`：退票原因（必填）
-  - `refundItemList`：退票明细列表（必填），每项包含：
-    - `ticketId`：票号（必填，从订单详情获取）
-    - `passengerId`：乘客ID（必填）
-    - `passengerName`：乘客姓名（必填）
+
+### 🔧 Python 调用命令 - 申请退票
+
+**命令格式（cmd）**：
+```bash
+python scripts/apiexe.py call --method flight.refund --arg "{\"orderBaseId\": \"SRO202603091138018328863\", \"orderType\": 0, \"applyType\": 1, \"refundType\": 1, \"amount\": 479, \"refundReason\": \"行程变更\", \"refundItemList\": [{\"ticketId\": \"your_ticket_id\", \"passengerId\": 399, \"passengerName\": \"周刘\"}]}"
+```
+
+**命令格式（PowerShell）**：
+```powershell
+python scripts/apiexe.py call --method flight.refund --arg-file temp/flightrefund_params.json
+```
+
+**参数说明**：
+- `orderBaseId`: 订单号（必填）
+- `orderType`: 订单类型，默认 0（必填）
+- `applyType`: 申请类型，默认 1（必填）
+- `refundType`: 1-全额退票，2-部分退票（必填）
+- `amount`: 退款金额（必填，从核损结果获取）
+- `refundReason`: 退票原因（必填）
+- `refundItemList`: 退票明细列表（必填）
+  - `ticketId`: 票号（必填，从订单详情获取，取值`data.flightProductInfos.items[].passengers[].ticketId`）
+  - `passengerId`: 乘客ID（必填）
+  - `passengerName`: 乘客姓名（必填）
 
 **确认话术示例 - 全额退票**（润色展示，一行一行展示，勿用表格）：
 
@@ -729,7 +948,7 @@ CA1234 经济舱暂时无票，但还有以下选择：
 
 📅 2026年3月8日 北京 → 上海
 
-【推荐】CA1234 首都机场 08:00 → 虹桥机场 10:15  2h15m ⭐
+【推荐】CA1234 首都机场 08:00 → 虹桥机场 10:15  2h15m  ⭐
    💺 经济舱 ¥680  公务舱 ¥1980
 
 用户: CA1234
