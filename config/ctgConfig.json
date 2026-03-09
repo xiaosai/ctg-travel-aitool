@@ -1,5 +1,4 @@
 {
   "apiKey": "test-api",
-  "secret": "test-secret",
   "callUrl": "http://ts-api.ourtour.com/openapi/tools/call"
 }

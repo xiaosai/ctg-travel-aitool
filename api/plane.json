@@ -410,14 +410,17 @@
           }
         }
       },
-      "required": ["memberId", "phoneNumber", "orderSource", "orderType", "subOrderType", "tripType", "fromDate", "totalAmount", "payAmount", "items", "contact", "departureCityId", "destinationCityId"]
+      "required": ["memberId", "phoneNumber", "orderSource", "orderType", "subOrderType", "tripType", "fromDate", "totalAmount", "payAmount", "items", "contact", "departureCityId", "destinationCityId"
+      , "resourceItemId","sessionId","goExtData","adultNum","childNum","adultSalePrice","adultAirportFee","adultOilFee","childSalePrice","childAirportFee",
+        "childOilFee","cabinGrade"
+      ]
     }
   },
   {
     "method": "getOrderStatus",
     "description": "获取订单状态",
     "category": "ORDER",
-    "subCategory": "FLIGHT",
+    "subCategory": "COMMON",
     "action": "STATUS",
     "parameters": {
       "type": "object",
@@ -434,7 +437,7 @@
     "method": "flight.cancelOrder",
     "description": "取消机票订单",
     "category": "ORDER",
-    "subCategory": "FLIGHT",
+    "subCategory": "COMMON",
     "action": "CANCEL",
     "parameters": {
       "type": "object",
@@ -575,17 +578,20 @@
           "items": {
             "type": "object",
             "properties": {
-              "ticketId": {
+              "orderItemNo": {
                 "type": "string",
-                "description": "票号（必填）"
+                "description": "订单项编号（order item no）"
               },
-              "passengerId": {
+              "passengerIdList": {
+                "type": "array",
+                "description": "需要退票的乘客ID列表（必填）",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "refundQuantity": {
                 "type": "integer",
-                "description": "乘客ID（必填）"
-              },
-              "passengerName": {
-                "type": "string",
-                "description": "乘客姓名（必填）"
+                "description": "本次退票退几张票"
               }
             },
             "required": ["ticketId", "passengerId", "passengerName"]
@@ -600,7 +606,7 @@
     "description": "获取订单详情",
     "category": "ORDER",
     "subCategory": "COMMON",
-    "action": "DETAIL",
+    "action": "QUERY",
     "parameters": {
       "type": "object",
       "properties": {
