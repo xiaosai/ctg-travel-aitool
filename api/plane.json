@@ -600,7 +600,7 @@
     "description": "获取订单详情",
     "category": "ORDER",
     "subCategory": "COMMON",
-    "action": "DETAIL",
+    "action": "QUERY",
     "parameters": {
       "type": "object",
       "properties": {
