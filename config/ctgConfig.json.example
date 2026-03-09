@@ -1,5 +1,0 @@
-{
-  "apiKey": "请填写您的API密钥",
-  "secret": "请填写您的密钥（用于 auth 签名）",
-  "callUrl": "https://ts-api.ourtour.com/openapi/tools/call"
-}
