@@ -594,7 +594,7 @@
                 "description": "本次退票退几张票"
               }
             },
-            "required": ["ticketId", "passengerId", "passengerName"]
+            "required": ["orderItemNo", "passengerIdList", "refundQuantity"]
           }
         }
       },
