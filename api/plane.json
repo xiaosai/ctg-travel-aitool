@@ -578,17 +578,20 @@
           "items": {
             "type": "object",
             "properties": {
-              "ticketId": {
+              "orderItemNo": {
                 "type": "string",
-                "description": "票号（必填）"
+                "description": "订单项编号（order item no）"
               },
-              "passengerId": {
+              "passengerIdList": {
+                "type": "array",
+                "description": "需要退票的乘客ID列表（必填）",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "refundQuantity": {
                 "type": "integer",
-                "description": "乘客ID（必填）"
-              },
-              "passengerName": {
-                "type": "string",
-                "description": "乘客姓名（必填）"
+                "description": "本次退票退几张票"
               }
             },
             "required": ["ticketId", "passengerId", "passengerName"]

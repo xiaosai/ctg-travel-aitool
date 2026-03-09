@@ -32,8 +32,8 @@
 1. 识别用户意图 → 判断是否为退票场景
 2. 获取订单信息（orderHistory 或 orderDetail）
 3. 根据用户输入判断 refundType：
-   - 全退：所有乘客纳入 refundItemList
-   - 部分退：仅用户指定的乘客纳入 refundItemList
+    - 全退：所有乘客纳入 refundItemList
+    - 部分退：仅用户指定的乘客纳入 refundItemList
 4. 收集退票原因（必填）
 5. 计算或确认退款金额（必填）
 6. 向用户确认后提交
@@ -68,18 +68,23 @@
   * 用户未明确指定乘客 → refundType=1（全额退票）
   * 用户明确指定部分乘客（如「张三退票」）→ refundType=2（部分退票）
 - deductItemList：核损项目列表（必填），每项包含：
-  * orderItemNo：订单项编号（从订单详情获取）
+  * orderItemNo：订单项编号（从订单详情获取，取值 `data.flightProductInfos.items[].orderItemNo`）
   * passengerIdList：需要退票的乘客ID列表
     * 全额退票：包含订单中所有乘客ID
     * 部分退票：只包含用户指定的乘客ID
-- resourceType：资源类型，默认传 1（机票）
-- applyType：退款类型，默认传 0（自愿退票）
-- reason：退票原因
-- amount：退款金额（必填）- 从核损结果获取
-- refundItemList：退票乘客明细，每项必填 ticketId、passengerId、passengerName
-  * 从订单详情获取ticketId
-  * 全额退票：包含订单中所有乘客
-  * 部分退票：只包含用户指定的乘客
+- resourceType：资源类型，默认传 0（机票）
+- applyType：退款类型，默认传 1（自愿退票）
+- reason：退票原因（如"自愿退票"）
+- amount：退款金额（必填）- 从核损结果获取的 totalRefundAmount
+- originAmount：原支付金额（必填）- 从订单详情获取
+- reasonType：原因类型（必填），默认传 0
+- memberId：会员ID（必填）- 从认证上下文获取
+- refundItemList：退票乘客明细（必填），每项包含：
+  * orderItemNo：订单项编号（从订单详情获取，与核损接口使用相同值）
+  * orderPassengerIds：乘客ID数组（如 [264]，注意是数组格式）
+  * refundQuantity：退票数量（如 1）
+  * refundAmount：退票手续费（必填，从核损结果获取）
+    * 注意：这是手续费金额，不是退款金额！退款金额是 amount
 ```
 
 ---
@@ -492,6 +497,8 @@ python scripts/apiexe.py call --method flight.cancelOrder --arg-file temp/cancel
 - `orderBaseId`: 订单号（必填）
 - `orderType`: 订单类型，默认 0（机票）
 - `cancelReason`: 取消原因
+- `orderType` : 订单类型 默认机票 0
+- `subOrderType` : 默认国内机票 DOMESTIC_FLIGHT
 - `terminalCode`: 终端类型，如 "APP"
 
 **确认话术示例**（润色展示，一行一行展示，勿用表格）：
@@ -640,9 +647,9 @@ python scripts/apiexe.py call --method orderDetail --arg-file temp/orderdetail_p
 
 **步骤2：获取订单详情**
 - 调用 `orderDetail` 获取订单信息，包括：
-  - 乘客列表（passengerId、passengerName、ticketId）
-  - 订单项编号（orderItemNo）
-  - 航班信息
+    - 乘客列表（passengerId、passengerName、ticketId）
+    - 订单项编号（orderItemNo）
+    - 航班信息
 - 展示订单信息供用户确认
 
 **步骤3：判断退票类型**
@@ -651,12 +658,12 @@ python scripts/apiexe.py call --method orderDetail --arg-file temp/orderdetail_p
 
 **步骤4：收集退票信息**
 - **全退场景**（refundType=1）：
-  - 无需询问乘客，自动包含所有乘客
-  - 退票原因：询问用户「退票原因是什么？」
+    - 无需询问乘客，自动包含所有乘客
+    - 退票原因：询问用户「退票原因是什么？」
 
 - **部分退票场景**（refundType=2）：
-  - 确认要退票的乘客：「请确认要退票的乘客：张三、李四」
-  - 退票原因：询问用户「退票原因是什么？」
+    - 确认要退票的乘客：「请确认要退票的乘客：张三、李四」
+    - 退票原因：询问用户「退票原因是什么？」
 
 **步骤5：核损（orderDeduct）**
 - 调用 `orderDeduct` 接口计算退票手续费和退款金额
@@ -680,10 +687,10 @@ python scripts/apiexe.py call --method orderDeduct --arg-file temp/orderdeduct_p
 - `applyType`: 0-自愿退票，1-非自愿退票，默认 0
 - `reason`: 退票原因
 - `deductItemList`: 核损项目列表（必填）
-  - `orderItemNo`: 订单项编号（从订单详情获取 取值`data.flightProductInfos.items[].orderItemNo`）
-  - `passengerIdList`: 需要退票的乘客ID列表
-    * 全额退票：包含订单中所有乘客ID
-    * 部分退票：只包含用户指定的乘客ID
+    - `orderItemNo`: 订单项编号（从订单详情获取 取值`data.flightProductInfos.items[].orderItemNo`）
+    - `passengerIdList`: 需要退票的乘客ID列表
+        * 全额退票：包含订单中所有乘客ID
+        * 部分退票：只包含用户指定的乘客ID
 
 **核损结果展示**（润色展示，一行一行展示，勿用表格）：
 
@@ -722,7 +729,7 @@ python scripts/apiexe.py call --method orderDeduct --arg-file temp/orderdeduct_p
 
 **命令格式（cmd）**：
 ```bash
-python scripts/apiexe.py call --method flight.refund --arg "{\"orderBaseId\": \"SRO202603091138018328863\", \"orderType\": 0, \"applyType\": 1, \"refundType\": 1, \"amount\": 479, \"refundReason\": \"行程变更\", \"refundItemList\": [{\"ticketId\": \"your_ticket_id\", \"passengerId\": 399, \"passengerName\": \"周刘\"}]}"
+python scripts/apiexe.py call --method flight.refund --arg "{\"orderBaseId\": \"SRO202603091138018328863\", \"orderType\": 0, \"applyType\": 1, \"refundType\": 1, \"amount\": 479, \"refundReason\": \"行程变更\", \"refundItemList\": [{\"orderItemNo\": \"OI202603091441449321207\", \"orderPassengerIds\": [\"399\"], \"refundQuantity\" : 1, \"refundAmount\" : 252}]}"
 ```
 
 **命令格式（PowerShell）**：
@@ -735,12 +742,16 @@ python scripts/apiexe.py call --method flight.refund --arg-file temp/flightrefun
 - `orderType`: 订单类型，默认 0（必填）
 - `applyType`: 申请类型，默认 1（必填）
 - `refundType`: 1-全额退票，2-部分退票（必填）
-- `amount`: 退款金额（必填，从核损结果获取）
-- `refundReason`: 退票原因（必填）
+- `amount`: 从核损的`flightDeductInfo.totalRefundAmount`获取（退款金额）
+- `reason`: 退票原因（必填）
+- `reasonType`: 退票原因枚举 默认0即可
 - `refundItemList`: 退票明细列表（必填）
-  - `ticketId`: 票号（必填，从订单详情获取，取值`data.flightProductInfos.items[].passengers[].ticketId`）
-  - `passengerId`: 乘客ID（必填）
-  - `passengerName`: 乘客姓名（必填）
+    - `orderItemNo`: 订单项编号（从订单详情获取 取值从核损的`ddeductItemList[].orderItemNo`获取）
+    - `orderPassengerIds`: 从核损的`deductItemList[].passengerIdList`获取，转为数组，必须是数组，不能是单个数字
+        * 全额退票：包含订单中所有乘客ID
+        * 部分退票：只包含用户指定的乘客ID
+    - `refundQuantity`：需要退票的乘客人数
+    - `refundAmount`: 从核损的`flightDeductInfo.totalFeeAmount`获取（手续费）
 
 **确认话术示例 - 全额退票**（润色展示，一行一行展示，勿用表格）：
 
