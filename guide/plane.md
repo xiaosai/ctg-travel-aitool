@@ -231,6 +231,7 @@ HU9012 首都机场 14:00 → 虹桥机场 16:20  2h20m  ⚡ 价格优
 **items[]** 每条需包含：
 - resourceItemId、sessionId、goExtData、adultNum、childNum、adultSalePrice、adultAirportFee、adultOilFee、childSalePrice、childAirportFee、childOilFee、cabinGrade（1 经济舱 2 商务/头等）；
 - **goExtData**：取**舱位详情** `goFlightCabin.cabinList[].extData` 的**整段 JSON 字符串**（不是航班列表的 extData 短码）；
+- **sessionId**：取**舱位详情** `data.sessionId` ，`sessionId` 必须放在 `items` 数组内的每个 `item` 对象中，而不是请求体的根级别；
 - **passengers[]**：从 getPassengerList 选中项构造，含 passengerId、name、idNumber、idType、phoneNumber、customerType（0 成人）、birthday；gender、nationality、pinyinname 可传空字符串；
 - departCityName、departCityCode（如 BJS）、arriveCityName、arriveCityCode（如 SHA）、quantity（1）、rangeType（1 去程）；
 - **contact**：本段联系人，字段可空，phone 建议与顶层一致；
