@@ -444,7 +444,7 @@
     }
   },
   {
-    "method": "orderHistory",
+    "method": "hotel.orderHistory",
     "description": "获取酒店订单历史列表",
     "category": "ORDER",
     "subCategory": "HOTEL",

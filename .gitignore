@@ -64,3 +64,6 @@ coverage.xml
 
 # mypy
 .mypy_cache/
+
+# API response cache
+cache/

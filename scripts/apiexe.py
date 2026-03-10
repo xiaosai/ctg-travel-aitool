@@ -11,6 +11,7 @@ import base64
 import hmac
 import hashlib
 import json
+import os
 import random
 import sys
 import time
@@ -19,6 +20,48 @@ from pathlib import Path
 SKILL_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_FILE = SKILL_ROOT / "config" / "ctgConfig.json"
 API_DIR = SKILL_ROOT / "api"
+CACHE_DIR = SKILL_ROOT / "cache"
+CACHE_EXPIRE_SECONDS = 3600  # 1小时
+
+# 支持缓存的接口配置：method -> (缓存文件名模板, 用于构造缓存key的参数列表)
+CACHEABLE_METHODS = {
+    "cityList": ("cityList_{0}_{1}.json", ["resourceType", "domesticType"]),
+}
+
+
+def get_cache_key(method, params):
+    """根据 method 和参数生成缓存文件名"""
+    if method not in CACHEABLE_METHODS:
+        return None
+    template, keys = CACHEABLE_METHODS[method]
+    values = [str(params.get(k, "default")) for k in keys]
+    return template.format(*values)
+
+
+def get_cached_data(cache_file):
+    """获取缓存数据，如果缓存无效或不存在返回 None"""
+    cache_path = CACHE_DIR / cache_file
+    if not cache_path.exists():
+        return None
+    file_mtime = cache_path.stat().st_mtime
+    if time.time() - file_mtime > CACHE_EXPIRE_SECONDS:
+        return None
+    try:
+        with open(cache_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
+def save_cache_data(cache_file, data):
+    """保存数据到缓存"""
+    CACHE_DIR.mkdir(exist_ok=True)
+    cache_path = CACHE_DIR / cache_file
+    try:
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass  # 缓存保存失败不影响主流程
 
 
 def load_config():
@@ -196,8 +239,20 @@ def main():
 
     payload = build_payload(config, method_part, params_part)
     url = get_call_url(config)
+    
+    # 检查缓存
+    cache_key = get_cache_key(args.method, params_part)
+    if cache_key:
+        cached = get_cached_data(cache_key)
+        if cached is not None:
+            print(json.dumps(cached, ensure_ascii=False, indent=2))
+            sys.exit(0)
+    
     try:
         result = api_call(url, payload)
+        # 保存缓存
+        if cache_key and result.get("success"):
+            save_cache_data(cache_key, result)
         print(json.dumps(result, ensure_ascii=False, indent=2))
     except Exception as e:
         print(f"❌ {e}", file=sys.stderr)
