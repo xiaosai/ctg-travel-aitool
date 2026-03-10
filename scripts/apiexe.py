@@ -70,17 +70,6 @@ def build_payload(config, method_part, params_part):
         "params": params_part,
         "auth": auth_part
     }
-    auth_part = {
-        "key": api_key,
-        "timestamp": timestamp,
-        "nonce": nonce,
-        "signature": signature_b64
-    }
-    return {
-        "method": method_part,
-        "params": params_part,
-        "auth": auth_part
-    }
 
 
 def api_call(url, payload, timeout=30):
