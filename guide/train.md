@@ -41,7 +41,6 @@
 
 ---
 
-
 ## 核心步骤与数据流（Agent 内部参考，勿对用户说）
 
 以下为内部执行顺序与数据依赖，**向用户展示时只用业务话术**（如「正在查车次」「正在占位」），不得出现接口名、API、method 等。
@@ -247,20 +246,40 @@ python scripts/apiexe.py call --method savePassenger --arg-file temp/savepasseng
 ### 第五阶段：下单占位
 
 调用 `train.createOrder`。必填字段按接口文档，缺则提示。resourceItemId 从 train.detail 返回中获取，passengers 从 train.passengers 中选取用户勾选的人员构造。
-**顶层必传**：memberId(可空，不传)、userName（可空）、phoneNumber(可空)、email（可空）、orderSource（固定传 0）、orderType（如 2）、subOrderType（`DOMESTIC_TRAIN`）、fromDate（YYYY-MM-DD）、departureCityId、destinationCityId。
-**orderItem**每条需包含： resourceItemId、hasSeat、fromDate、seatTypeName、adultSalePrice、childSalePrice、passengers；
+**必填参数**：orderSource（固定：0）、orderType（固定：2）、subOrderType（固定：`DOMESTIC_TRAIN`）、fromDate（格式YYYY-MM-DD）、orderItem。
 
-- **resourceItemId**：传train.detail返回的resourceItemId；
-- **hasSeat**: 默认传false
-- **fromDate**: 传train.detail返回的fromDate；
-- **passengers**对象: passengerId、 name, idType、 idNo、passengerType(乘客类型 0-成人 1-儿童 2-免费儿童)、seatTypeName(座位类型名称)、parentId(绑定成人ID (仅免费儿童有效))
+**orderItem格式**：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| resourceItemId| string | 资源项id |
+| fromDate| string | 乘车日期，传train.detail返回的fromDate |
+| hasSeat| boolean | 是否接收无座，默认传false |
+| seatTypeName| string | 座位类型名称 |
+| adultSalePrice| number | 成人销售价 |
+| childSalePrice| number | 儿童票面价 |
+| passengers| object| 乘客信息列表 |
+
+**passengers格式**：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| passengerId | long| 乘客id |
+| name| string | 乘客姓名 |
+| idType| string | 乘客证件类型 |
+| idNumber| string | 乘客证件号码 |
+| phoneNumber| number | 乘客手机号码 |
+| passengerType| int | 乘客类型 0-成人 1-儿童 2-免费儿童 |
+| seatTypeName| string | 座位类型名称 |
+| parentId | long | 绑定成人ID (仅免费儿童有效) |
+
 
 ### 🔧 Python 调用命令
 
 **命令格式（cmd）**：
 
 ```bash
-python scripts/apiexe.py call --method train.createOrder --arg "{\"distributor\":null,\"email\":\"\",\"memberId\":\"83a47edff10246af9f29ff4975e86646\",\"userName\":\"\",\"phoneNumber\":\"18872233316\",\"orderSource\":0,\"orderType\":2,\"subOrderType\":\"DOMESTIC_TRAIN\",\"orderItem\":{\"hasSeat\":false,\"resourceItemId\":\"RW12ff1d2df9da42567f1b939bbfefe481\",\"fromDate\":\"2026-02-12\",\"seatTypeName\":\"无座\",\"adultSalePrice\":298,\"childSalePrice\":149,\"passengers\":[{\"passengerId\":316,\"passengerType\":0,\"seatTypeName\":\"无座\",\"parentId\":null,\"idNumber\":\"420115199001010101\",\"phoneNumber\":\"18872233316\",\"name\":\"张飞\"}]},\"departureCityId\":\"4\",\"destinationCityId\":\"785\",\"serviceFee\":0.00}"
+python scripts/apiexe.py call --method train.createOrder --arg "{\"orderSource\":0,\"orderType\":2,\"subOrderType\":\"DOMESTIC_TRAIN\",\"orderItem\":{\"hasSeat\":false,\"resourceItemId\":\"RW12ff1d2df9da42567f1b939bbfefe481\",\"fromDate\":\"2026-02-12\",\"seatTypeName\":\"无座\",\"adultSalePrice\":298,\"childSalePrice\":149,\"passengers\":[{\"passengerId\":316,\"passengerType\":0,\"seatTypeName\":\"无座\",\"parentId\":null,\"idNumber\":\"420115199001010101\",\"phoneNumber\":\"18872233316\",\"name\":\"张飞\"}]}}"
 ```
 
 **命令格式（PowerShell）**：
@@ -501,7 +520,7 @@ python scripts/apiexe.py call --method orderDetail --arg-file temp/orderdetail_p
 
 **订单状态**
 
-用户端展示 status 对应的'状态说明'
+订单详情->订单状态 展示 响应数据status 对应的'状态说明'
 
 | 状态(statusModule.status) |  状态说明 |
 |------|----------|
@@ -815,8 +834,6 @@ G311 一等座暂时无票，但还有以下选择：
 
 ---
 
-
-
 ## 用户体验
 
 ### 对话风格
@@ -922,8 +939,6 @@ G311 一等座暂时无票，但还有以下选择：
 ```
 
 ---
-
-
 
 ## 接口调用方式
 
