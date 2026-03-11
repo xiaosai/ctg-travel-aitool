@@ -22,7 +22,7 @@
   },
   {
     "method": "train.search",
-    "description": "车站列表",
+    "description": "车次列表",
     "category": "RESOURCE",
     "subCategory": "TRAIN",
     "action": "SEARCH",
@@ -152,7 +152,7 @@
   },
   {
     "method": "train.detail",
-    "description": "车站详情",
+    "description": "车次详情",
     "category": "RESOURCE",
     "subCategory": "TRAIN",
     "action": "DETAIL",
@@ -187,7 +187,7 @@
     }
   },
   {
-    "method": "train.passengers",
+    "method": "getPassengerList",
     "description": "获取乘客信息列表",
     "category": "PASSENGER",
     "subCategory": "COMMON",
@@ -197,14 +197,15 @@
       "properties": {
         "orderType": {
           "type": "integer",
-          "description": "订单类型 默认值0(机票)"
+          "description": "订单类型 默认值2(火车票)",
+          "default": 2
         }
       },
       "required": []
     }
   },
   {
-    "method": "train.save-passenger",
+    "method": "savePassenger",
     "description": "保存乘客信息",
     "category": "PASSENGER",
     "subCategory": "COMMON",
@@ -270,37 +271,112 @@
       "type": "object",
       "description": "创建火车票订单请求参数",
       "properties": {
-        "resourceItemId": {
+        "orderSource": {
           "type": "string",
-          "description": "资源项ID"
-        },
-        "seatName": {
-          "type": "string",
-          "description": "座位类型名称"
-        },
-        "passengerInfoList": {
-          "type": "array",
-          "description": "乘客信息列表",
-          "items": {
-            "$ref": "#/definitions/PassengerInfo"
-          }
-        },
-        "contactName": {
-          "type": "string",
-          "description": "联系人姓名"
-        },
-        "contactPhone": {
-          "type": "string",
-          "description": "联系人电话"
-        },
-        "entranceSource": {
-          "type": "integer",
-          "description": "入口来源 0-新旅行 1-疗休养",
-          "enum": [0, 1],
+          "description": "订单来源(0-APP，1-小程序，2-中移动) ",
           "default": 0
+        },
+        "distributor": {
+          "type": "string",
+          "description": "分销商(0-NBS)",
+          "default": 0
+        },
+        "orderType": {
+          "type": "string",
+          "description": "订单类型"
+        },
+        "subOrderType": {
+          "type": "string",
+          "description": "子订单类型"
+        },
+        "departureCityId": {
+          "type": "string",
+          "description": "出发城市ID"
+        },
+        "arrivalCityId": {
+          "type": "string",
+          "description": "到达城市ID"
+        },
+        "serviceFee": {
+          "type": "number",
+          "description": "服务费"
+        },
+        "orderItem": {
+          "type": "object",
+          "description": "订单项信息",
+          "properties": {
+            "resourceItemId": {
+              "type": "string",
+              "description": "资源项id"
+            },
+            "fromDate": {
+              "type": "string",
+              "description": "乘车日期"
+            },
+            "seatTypeName": {
+              "type": "string",
+              "description": "座位类型名称"
+            },
+            "adultSalePrice": {
+              "type": "number",
+              "description": "成人销售价"
+            },
+            "childSalePrice": {
+              "type": "number",
+              "description": "儿童销售价"
+            },
+            "hasSeat": {
+              "type": "boolean",
+              "description": "是否接收无座"
+            },
+            "passengers": {
+              "type": "array",
+              "description": "乘客信息列表",
+              "properties": {
+                "type": "object",
+                "description": "乘客信息",
+                "properties": {
+                  "passengerId": {
+                    "type": "string",
+                    "description": "乘客ID"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "乘客姓名"
+                  },
+                  "idType": {
+                    "type": "string",
+                    "description": "证件类型"
+                  },
+                  "idNo": {
+                    "type": "string",
+                    "description": "证件号码"
+                  },
+                  "phoneNumber": {
+                    "type": "string",
+                    "description": "手机号码"
+                  },
+                  "passengerType": {
+                    "type": "number",
+                    "description": "乘客类型 0-成人 1-儿童 2-免费儿童"
+                  },
+                  "seatTypeName": {
+                    "type": "string",
+                    "description": "座位类型名称"
+                  },
+                  "parentId": {
+                    "type": "number",
+                    "description": "绑定成人ID (仅免费儿童有效)"
+                  }
+                },
+                "required": ["passengerId", "name", "idType", "idNo", "passengerType", "seatTypeName"]
+              }
+            }
+          },
+          "required": ["resourceItemId", "fromDate", "seatTypeName", "adultSalePrice", "childSalePrice", "hasSeat", "passengers"]
         }
       },
-      "required": ["resourceItemId", "seatName", "passengerInfoList", "contactName", "contactPhone"]
+      "required": ["orderSource", "orderType", "subOrderType", "orderItem"]
     }
   },
   {

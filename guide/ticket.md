@@ -29,6 +29,9 @@
 6. 根据门票 visitorInfoType/visitorInfoGroupSize 确定所需游客数量并选择游客
 7. 创建门票订单 → resourceItemId 取自景点详情 ticketList 中选中项的 resourceItemId
 8. 查询订单详情、订单状态 → orderDetail、getOrderStatus
+9. 取消订单（可选）→ ticket.cancelOrder
+10. 获取历史订单 → orderHistory
+11. 退票流程 → orderDetail（获取订单详情）→ ticket.refund.info（获取退款信息）→ ticket.refund（申请退票）
 ```
 
 ---
@@ -45,6 +48,9 @@
 5. getPassengerList（orderType=3）→ 查询门票用乘客列表；无乘客或用户要新增时调用 savePassenger（姓名、手机号、身份证号）
 6. createTicketOrder（创建门票订单）→ 入参：resourceItemId（景点详情 ticketList 中选中项的 resourceItemId），以及 quantity、price、totalPrice、travelDate、travellerInfoList 等
 7. orderDetail、getOrderStatus → 查询订单详情与状态
+8. ticket.cancelOrder（取消门票订单）→ 用户取消未支付订单时调用，必填 orderBaseId，可选 orderType=3、cancelReason
+9. orderHistory（获取门票订单历史列表）→ 入参：current（默认1）、size（默认15）；无必填，用于「我的门票订单」「历史订单」等场景
+10. 退票链路：orderDetail（获取订单详情）→ ticket.refund.info（获取退款信息）→ ticket.refund（申请退票）
 ```
 
 **游客数量规则**（ticketList 中）：
@@ -55,6 +61,54 @@
   - 4 = 每 visitorInfoGroupSize 个人需要一位游玩人信息  
   - 5 = 每一张票需要 visitorInfoGroupSize 位游玩人信息  
 - `visitorInfoGroupSize`：游玩人信息数量。选择乘客时需满足上述规则要求的数量。
+
+---
+
+## 退票场景智能识别
+
+**用户表达意图识别**：
+
+| 用户输入 | refundType | 说明 |
+|---------|-----------|------|
+| 「退票」「我要退票」「取消这张门票」 | 1（全额退票） | 未指定游客，默认全退 |
+| 「全退」「全部退票」「都退」 | 1（全额退票） | 明确全额退票 |
+| 「张三退票」「退张三的票」 | 2（部分退票） | 指定了单个游客 |
+| 「张三和李四退票」「退张三和李四」 | 2（部分退票） | 指定了部分游客 |
+
+**处理流程**：
+1. 识别用户意图 → 判断是否为退票场景
+2. 获取订单信息（orderHistory 或 orderDetail）
+3. 根据用户输入判断 refundType（全退/部分退）；门票当前流程为整单退，refundItemList 取退款信息接口返回的一条明细
+4. 获取退款信息（ticket.refund.info）→ 得到可退数量、原金额、现金/额度退款金额、orderItemNo
+5. 向用户展示退款信息并确认后提交 ticket.refund
+
+---
+
+## 退票接口调用链路
+
+```
+1. orderDetail（获取订单详情）→ 根据订单号获取订单信息，供用户确认
+2. ticket.refund.info（获取退款信息）→ 根据订单号获取可退数量、退款金额等（退票前必调）
+3. ticket.refund（申请退票）→ 用户确认退款信息后提交退票申请
+
+退款信息接口（ticket.refund.info）返参说明：
+- refundQuantity：可退数量
+- quantity：下单数量
+- orderItemNo：订单明细编号（申请退票时 refundItemList[0].orderItemNo 取此值）
+- originAmount：原金额
+- cashRefundAmount：现金退款金额
+- quotaRefundAmount：额度退款金额
+
+申请退票接口（ticket.refund）入参说明：
+- refundItemList：仅一个元素
+  * orderItemNo：取退款信息接口返回的 orderItemNo
+  * refundQuantity：本次退票数量，取退款信息返回的 refundQuantity（可退数量）
+  * refundAmount：本次退款金额，取退款信息返回的 cashRefundAmount + quotaRefundAmount（或接口约定的退款金额）
+- amount：订单总退款金额（与 refundItemList[0].refundAmount 一致或为整单退款总额）
+- orderType：传 3（门票）
+- applyType：申请类型，默认 1
+- refundType：1-全额退票
+```
 
 ---
 
@@ -337,6 +391,222 @@ python scripts/apiexe.py call --method getOrderStatus --arg "{\"orderBaseId\": \
 
 ---
 
+### 第八阶段：取消订单（可选）
+
+当用户表达取消门票订单意愿时，执行取消订单。必填为订单号（orderBaseId），按 [api/ticket.json](../api/ticket.json) 文档，缺则向用户确认订单号。
+
+**场景**：用户想改订其他门票或不再购买，需先取消当前未支付订单。
+
+**流程**：
+1. 向用户确认：「检测到您有未支付的门票订单，是否需要取消？」
+2. 用户同意后执行取消
+3. 取消成功后按用户意图继续（如重新选票或结束）
+
+### 🔧 Python 调用命令 - 取消订单
+
+**命令格式（cmd）**：
+```bash
+python scripts/apiexe.py call --method ticket.cancelOrder --arg "{\"orderBaseId\": \"TRO202603151234567890\", \"orderType\": 3, \"cancelReason\": \"不需要了\"}"
+```
+
+**命令格式（PowerShell）**：
+```powershell
+python scripts/apiexe.py call --method ticket.cancelOrder --arg-file temp/ticket_cancelorder_params.json
+```
+
+**参数说明**：
+- `orderBaseId`: 订单号（必填）
+- `orderType`: 订单类型，传 3（门票）
+- `cancelReason`: 取消原因（可选）
+
+**确认话术示例**（润色展示，一行一行展示，勿用表格）：
+
+```
+⚠️ 检测到您有未支付订单
+
+订单号：TRO202603151234567890
+景点：故宫博物院  门票：成人票 × 1
+
+如需改订其他门票，需先取消当前订单。
+
+是否取消该订单？(y/n)
+```
+
+**取消成功**：「✅ 已为您提交取消申请，订单取消后将自动释放名额。」
+
+---
+
+### 第九阶段：获取历史订单
+
+当用户表达「查看订单」「我的门票订单」「历史订单」等意图时，调用 `orderHistory`。入参为 current（默认 1）、size（默认 15），无必填项。
+
+**触发场景**：
+- 用户说「查看我的门票订单」
+- 用户说「最近买过的门票」
+- 用户说「订单历史」
+
+### 🔧 Python 调用命令 - 订单历史
+
+**命令格式（cmd）**：
+```bash
+python scripts/apiexe.py call --method orderHistory --arg "{\"current\": 1, \"size\": 15}"
+```
+
+**命令格式（PowerShell）**：
+```powershell
+python scripts/apiexe.py call --method orderHistory --arg-file temp/orderhistory_ticket_params.json
+```
+
+**参数说明**：
+- `current`: 当前页码，默认 1
+- `size`: 每页数量，默认 15
+
+**展示格式示例**（一行一行展示，勿用表格）：
+
+```
+📋 您的门票订单历史
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+订单1：
+  订单号：TRO202603151234567890
+  景点：故宫博物院  成人票 × 1
+  游玩日期：2026年3月15日
+  状态：✅ 已支付
+  金额：¥60
+
+订单2：
+  订单号：TRO202603101234567891
+  景点：长城  成人票 × 2
+  游玩日期：2026年3月20日
+  状态：⏰ 待支付
+  金额：¥120
+  ⚠️ 请在规定时间内完成支付
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+共 2 个订单。如需查看详情或退票，请回复订单号。
+```
+
+---
+
+### 第十阶段：申请退票
+
+当用户表达「退票」「我要退票」「申请退款」等意图时，按顺序调用 `orderDetail`（获取订单详情）、`ticket.refund.info`（获取退款信息）、`ticket.refund`（申请退票）。必填字段按 [api/ticket.json](../api/ticket.json)，缺则提示。
+
+**触发场景**：
+- 用户说「退票」
+- 用户说「我要申请退款」
+- 用户说「取消这张门票」（已支付场景下为退票）
+
+**流程**：
+
+**步骤1：确认订单号**
+- 如果用户未提供订单号，先调用 `orderHistory` 获取门票订单列表，让用户选择
+- 或询问用户订单号
+
+**步骤2：获取订单详情**
+- 调用 `orderDetail` 获取订单信息，包括景点、门票、金额、游客等
+- 展示订单信息供用户确认
+
+**步骤3：获取退款信息（ticket.refund.info）**
+- 调用 `ticket.refund.info`，入参为订单号 `orderBaseId`
+- 返参用于展示和后续申请退票：
+  - **refundQuantity**：可退数量
+  - **quantity**：下单数量
+  - **orderItemNo**：订单明细编号（申请退票时 refundItemList 中取此值）
+  - **originAmount**：原金额
+  - **cashRefundAmount**：现金退款金额
+  - **quotaRefundAmount**：额度退款金额
+
+### 🔧 Python 调用命令 - 获取退款信息
+
+**命令格式（cmd）**：
+```bash
+python scripts/apiexe.py call --method ticket.refund.info --arg "{\"orderBaseId\": \"TRO202603151234567890\"}"
+```
+
+**命令格式（PowerShell）**：
+```powershell
+python scripts/apiexe.py call --method ticket.refund.info --arg-file temp/ticket_refundinfo_params.json
+```
+
+**参数说明**：
+- `orderBaseId`: 订单号（必填）
+
+**退款信息展示**（润色展示，一行一行展示，勿用表格）：
+
+```
+📊 退款信息
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+订单号：TRO202603151234567890
+景点：故宫博物院  成人票 × 1
+游玩日期：2026年3月15日
+
+可退数量：1 张（下单数量：1 张）
+原支付金额：¥60
+退款金额：¥55（现金 ¥55 + 额度 ¥0）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+确认无误后，请回复「确认退票」。
+```
+
+**步骤4：用户确认**
+- 用户确认退款信息后，再提交退票申请
+
+**步骤5：提交退票申请（ticket.refund）**
+- 调用 `ticket.refund` 接口提交退票申请
+- **refundItemList** 只有一个元素：
+  - **orderItemNo**：取退款信息接口返回的 orderItemNo
+  - **refundQuantity**：取退款信息返回的 refundQuantity（可退数量）
+  - **refundAmount**：取退款信息返回的退款金额（一般为 cashRefundAmount + quotaRefundAmount）
+- **amount**：订单总退款金额，与上述 refundAmount 一致（整单退时仅一条明细）
+
+### 🔧 Python 调用命令 - 申请退票
+
+**命令格式（cmd）**：
+```bash
+python scripts/apiexe.py call --method ticket.refund --arg "{\"orderBaseId\": \"TRO202603151234567890\", \"orderType\": 3, \"applyType\": 1, \"refundType\": 1, \"amount\": 55, \"refundReason\": \"行程变更\", \"refundItemList\": [{\"orderItemNo\": \"OI202603151234567890\", \"refundQuantity\": 1, \"refundAmount\": 55}]}"
+```
+
+**命令格式（PowerShell）**：
+```powershell
+python scripts/apiexe.py call --method ticket.refund --arg-file temp/ticket_refund_params.json
+```
+
+**参数说明**：
+- `orderBaseId`: 订单号（必填）
+- `orderType`: 订单类型，传 3（门票）（必填）
+- `applyType`: 申请类型，默认 1（必填）
+- `refundType`: 1-全额退票（必填）
+- `amount`: 退款金额（必填），与 refundItemList[0].refundAmount 一致，取自退款信息接口的 cashRefundAmount + quotaRefundAmount
+- `refundReason`: 退票原因（可选）
+- `refundItemList`: 退票明细列表（必填），**仅一个元素**
+  - `orderItemNo`: 取退款信息接口返回的 orderItemNo
+  - `refundQuantity`: 取退款信息返回的 refundQuantity（可退数量）
+  - `refundAmount`: 取退款信息返回的退款金额（cashRefundAmount + quotaRefundAmount）
+
+**退票申请提交成功**：
+
+```
+✅ 退票申请已提交
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+订单号：TRO202603151234567890
+退款金额：¥55
+预计到账时间：3-7 个工作日
+
+您可以通过「查询订单状态」查看退票进度。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
 ## 步骤与数据对照（Agent 内部参考）
 
 | 阶段 | 步骤说明 | 关键入参 | 关键出参 |
@@ -350,6 +620,10 @@ python scripts/apiexe.py call --method getOrderStatus --arg "{\"orderBaseId\": \
 | 6 | 创建门票订单 | resourceItemId、quantity、price、totalPrice、travelDate、travellerInfoList 等 | 订单号等 |
 | 7 | 订单详情 | orderBaseId | 订单详情 |
 | 7 | 订单状态 | orderBaseId | status |
+| 8 | 取消订单 | orderBaseId、orderType=3、cancelReason(可选) | 取消结果 |
+| 9 | 订单历史 | current、size | 订单历史列表 |
+| 10 | 获取退款信息 | orderBaseId | refundQuantity、quantity、orderItemNo、originAmount、cashRefundAmount、quotaRefundAmount |
+| 10 | 申请退票 | orderBaseId、orderType=3、applyType、refundType、amount、refundItemList(orderItemNo、refundQuantity、refundAmount) | 退票申请结果 |
 
 ---
 
