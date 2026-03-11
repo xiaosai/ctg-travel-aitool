@@ -489,7 +489,7 @@
           }
         }
       },
-      "required": ["orderBaseId", "orderItemNo", "amount", "originAmount"]
+      "required": ["orderBaseId", "orderItemNo", "amount", "originAmount", "orderPassengerIds"]
     }
   },
   {
