@@ -70,3 +70,6 @@ cache/
 
 # Sensitive config (use ctgConfig.example.json as template)
 config/ctgConfig.json
+
+# Internal docs
+docs/

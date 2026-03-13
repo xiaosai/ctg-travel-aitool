@@ -1,4 +1,4 @@
 {
   "apiKey": "your-api-key-here",
-  "callUrl": "https://your-api-host/openapi/tools/call"
+  "callUrl": "https://pro-api.ourtour.com/openapi/tools/call"
 }
