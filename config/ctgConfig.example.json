@@ -1,0 +1,4 @@
+{
+  "apiKey": "your-api-key-here",
+  "callUrl": "https://your-api-host/openapi/tools/call"
+}
