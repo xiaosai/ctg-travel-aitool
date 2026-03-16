@@ -156,6 +156,8 @@ examples:
 
 ## 六、配置说明
 
+详细接入文档：https://pro-m.ourtour.com/new-journey/static-page/openClawGuide
+
 使用前需配置 `config/ctgConfig.json`：
 - `apiKey` 用于 auth.key
 - 请勿将包含真实凭证的 ctgConfig.json 提交至版本控制
