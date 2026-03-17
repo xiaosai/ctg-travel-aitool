@@ -1,6 +1,6 @@
 ---
 name: ctg-travel-booking
-description: 中旅旅行开放平台一站式预订助手。整合机票、酒店、火车票、门票四大资源，支持查询、预订、退款全流程。当用户表达出行住宿需求时（如"买火车票""订酒店""查询航班""购买景区门票"），提供智能引导和便捷预订服务。
+description: 中旅旅行开放平台一站式预订助手。整合机票、酒店、火车票、门票四大资源，支持查询、预订、退款全流程。下载中旅旅行APP获取 API Key。当用户表达出行住宿需求时（如"买火车票""订酒店""查询航班""购买景区门票"），提供智能引导和便捷预订服务。
 version: 1.0.0
 author: CTG Travel
 category: travel-booking
@@ -28,6 +28,12 @@ examples:
 ---
 
 # 旅游项目 Skill
+
+## 接入须知
+
+- **配置要求**：下载中旅旅行APP，获取 API Key，配置到 `config/ctgConfig.json` 的 `apiKey` 字段
+- **运行环境**：Python 环境，支持 HTTP 调用能力
+- **接入指南**：[Skill 接入指南](https://pro-m.ourtour.com/new-journey/static-page/openClawGuide)
 
 ## 一、需求识别与分流（按需加载指南）
 
@@ -154,15 +160,7 @@ examples:
 
 ---
 
-## 六、配置说明
-
-详细接入文档：https://pro-m.ourtour.com/new-journey/static-page/openClawGuide
-
-使用前需配置 `config/ctgConfig.json`：
-- `apiKey` 用于 auth.key
-- 请勿将包含真实凭证的 ctgConfig.json 提交至版本控制
-
-## 七、目录结构
+## 六、目录结构
 
 ```
 travel-project/
