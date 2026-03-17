@@ -112,6 +112,8 @@ python scripts/apiexe.py call --method cityList --arg "{\"domesticType\": 1, \"r
 - `page`：页码，默认 1
 - `pageSize`：每页数量，默认 10
 - `entranceSource`：入口来源，0-新旅行 1-疗休养
+- `rank`：排序规则
+- `filterList`：筛选条件列表
 
 ### 🔧 Python 调用命令
 
@@ -129,6 +131,8 @@ python scripts/apiexe.py call --method hotel.search --arg "{\"cityId\": 4, \"arr
 **注意事项**：
 - 日期格式必须为 yyyy-MM-dd，带横杠
 - `entranceSource` 默认为 0（新旅行）
+- `rank`：默认1
+- `filterList`：默认为空数组
 
 **展示格式示例**（接口返回后润色展示，一行一行展示，勿用表格）：
 

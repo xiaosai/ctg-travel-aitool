@@ -94,7 +94,7 @@
           "default": 0
         }
       },
-      "required": ["cityId", "arrivalDate", "departureDate"]
+      "required": ["cityId", "arrivalDate", "departureDate", "rank", "filterList"]
     }
   },
   {
