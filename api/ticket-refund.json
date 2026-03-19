@@ -1,0 +1,98 @@
+[
+  {
+    "method": "ticket.refund.info",
+    "description": "获取门票订单退款信息",
+    "category": "ORDER",
+    "subCategory": "TICKET",
+    "action": "REFUND_INFO",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "orderBaseId": {
+          "type": "string",
+          "description": "订单号"
+        }
+      },
+      "required": [
+        "orderBaseId"
+      ]
+    }
+  },
+  {
+    "method": "ticket.refund",
+    "description": "申请门票退票",
+    "category": "ORDER",
+    "subCategory": "TICKET",
+    "action": "REFUND",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "orderBaseId": {
+          "type": "string",
+          "description": "订单号"
+        },
+        "orderType": {
+          "type": "integer",
+          "description": "订单类型 传3(门票)"
+        },
+        "applyType": {
+          "type": "integer",
+          "description": "申请类型，默认1"
+        },
+        "refundType": {
+          "type": "integer",
+          "description": "退票类型 1-全额退票（全退） 2-部分退票（部分乘客退）"
+        },
+        "amount": {
+          "type": "number",
+          "description": "退款金额"
+        },
+        "refundReason": {
+          "type": "string",
+          "description": "退票原因"
+        },
+        "refundItemList": {
+          "type": "array",
+          "description": "退票明细列表",
+          "items": {
+            "type": "object",
+            "properties": {
+              "orderItemNo": {
+                "type": "string",
+                "description": "订单项编号（order item no）"
+              },
+              "passengerIdList": {
+                "type": "array",
+                "description": "需要退票的乘客ID列表（必填）",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "refundQuantity": {
+                "type": "integer",
+                "description": "本次退票退几张票"
+              },
+              "refundAmount": {
+                "type": "number",
+                "description": "本次退票退款金额"
+              }
+            },
+            "required": [
+              "orderItemNo",
+              "refundQuantity",
+              "refundAmount"
+            ]
+          }
+        }
+      },
+      "required": [
+        "orderBaseId",
+        "orderType",
+        "applyType",
+        "refundType",
+        "amount",
+        "refundItemList"
+      ]
+    }
+  }
+]
