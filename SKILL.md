@@ -46,6 +46,7 @@ examples:
 | 资源线 | 触发示例（命中则加载对应 guide） | 操作指南 | 接口文档 |
 |--------|----------------------------------|----------|----------|
 | **火车** | 买火车票、订火车票、买高铁票、动车票、预定武汉-北京火车票、查询火车票/高铁票、去上海有什么车次、坐 G101 去北京 | [guide/train.md](guide/train.md) | [api/train.json](api/train.json) |
+| **火车票退订** | 火车票退票、我要退票、申请退款、确认退票 | [guide/train-refund.md](guide/train-refund.md) | [api/train-refund.json](api/train-refund.json) |
 | **机票** | 买机票、订机票、买飞机票、预定北京-上海机票、查询航班/机票、明天飞杭州有什么航班、坐飞机去广州 | [guide/plane.md](guide/plane.md) | [api/plane.json](api/plane.json) |
 | **酒店** | 预订酒店、订酒店、订房、酒店订单、我的酒店订单、取消订单（未支付） | [guide/hotel.md](guide/hotel.md) | [api/hotel.json](api/hotel.json) |
 | **酒店退订** | 退订酒店、酒店退款、申请退款、我要退订 | [guide/hotel-refund.md](guide/hotel-refund.md) | [api/hotel-refund.json](api/hotel-refund.json) |
