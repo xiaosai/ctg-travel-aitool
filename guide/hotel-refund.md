@@ -1,420 +1,97 @@
 # 酒店退订操作指南
 
-**触发条件**：见 [SKILL.md](../SKILL.md) 中「一、需求识别与分流」的酒店退订触发示例。本指南在识别到用户要**退订酒店、申请退款**时按需加载。
+**触发条件**：退订/退款酒店
 
 ---
 
-## 必填字段收集原则（通用）
-
-**不写死必填项**。在需要向后台发起请求时：
-1. 查阅 [api/hotel-refund.json](../api/hotel-refund.json) 中对应 method 的 `parameters.required` 及 `properties`
-2. 若用户未给出某必填字段，用自然语言提示用户填写（勿说「请提供某某参数」）
-3. 每次只问一项缺项，待用户回复后再继续
-4. 所有必填字段收集完整后再发起请求
-
-**面向用户的话术**：对用户说的内容禁止出现「调用某某接口」「请求 API」「orderDeduct」等任何技术用语，一律使用「正在为您查询…」「正在核算退款金额」等业务话术。
-
----
-
-## 退订接口调用链路
+## 核心流程
 
 ```
-1. orderHistory（获取订单历史）→ 获取用户的酒店订单列表
-2. orderDetail（获取订单详情）→ 根据订单号获取详细信息，包括入住人列表和订单项编号
-3. orderDeduct（核损）→ 核算退订手续费和退款金额（退订前必调）
-4. hotel.refund（申请退订）→ 用户确认核损信息后提交退订申请
-```
-
-**关键参数说明**：
-- `orderItemNo`：订单项编号（从核损结果的 `deductItemList[].orderItemNo` 获取）
-- `amount`：退款金额（从核损结果获取）
-- `refundAmount`：手续费（从核损结果获取）
-- `orderPassengerIds`：入住人ID列表（从核损结果的 `deductItemList[].passengerIdList` 获取，注意是数组格式）
-- `resourceType`：资源类型，酒店传 1
-- `applyType`：申请类型，默认传 1
-- `refundType`：退订类型，1-全额退订 2-部分退订
-
----
-
-## 完整退订流程
-
-### 步骤1：确认订单号
-
-- 如果用户未提供订单号，先调用 `orderHistory` 获取订单列表，让用户选择
-- 或者询问用户订单号
-
-**触发场景**：
-- 用户说「退订」
-- 用户说「我要申请退款」
-- 用户说「取消这个订单」（已支付订单）
-
-### 🔧 Python 调用命令 - 订单历史
-
-**命令格式（cmd）**：
-```bash
-python scripts/apiexe.py call --method hotel.orderHistory --arg "{\"memberId\": \"15d6676f6be54d5099b106abeeecfcd6\"}"
-```
-
-**参数说明**：
-- `memberId`: 会员ID（从认证上下文中获取，通常无需询问）
-
-**展示格式示例**（一行一行展示，勿用表格）：
-
-```
-📋 您的酒店订单历史
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-订单1：
-  订单号：HRO202603101234567890
-  酒店：如家酒店(北京天安门广场店)
-  房型：标准大床房
-  入住：2026年3月15日 - 3月17日
-  状态：✅ 已完成
-  金额：¥796
-
-订单2：
-  订单号：HRO202603056789012345
-  酒店：汉庭酒店(上海外滩店)
-  房型：商务大床房
-  入住：2026年3月5日 - 3月6日
-  状态：⏰ 待支付
-  金额：¥498
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-请回复需要退订的订单号。
+1. hotel.orderHistory → 获取订单列表
+2. orderDetail → 获取订单详情（orderItemNo、入住人）
+3. orderDeduct → 核算手续费和退款金额
+4. hotel.refund → 提交退订申请
 ```
 
 ---
 
-### 步骤2：获取订单详情
+## 参数传递依赖
 
-调用 `orderDetail` 获取订单信息，包括：
-- 入住人列表（passengerId、passengerName）
-- 订单项编号（orderItemNo）
-- 酒店信息
-
-### 🔧 Python 调用命令 - 订单详情
-
-**命令格式（cmd）**：
-```bash
-python scripts/apiexe.py call --method orderDetail --arg "{\"orderBaseId\": \"HRO202603101234567890\"}"
-```
-
-**参数说明**：
-- `orderBaseId`: 订单号（如 HRO202603101234567890）
-
-**展示格式示例**（一行一行展示，勿用表格）：
-
-```
-📋 订单详情
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-订单号：HRO202603101234567890
-订单状态：✅ 已确认
-
-酒店信息：
-  酒店名：如家酒店(北京天安门广场店)
-  地址：北京市东城区前门大街XX号
-  电话：010-12345678
-  房型：标准大床房
-
-入住信息：
-  入住日期：2026年3月15日（周日）
-  离店日期：2026年3月17日（周二）
-  入住天数：2晚
-  房间数：1间
-
-入住人：
-  张三（320***********1234）
-
-费用明细：
-  房费：¥398/晚 × 2晚 = ¥796
-  ───────────────
-  总金额：¥796
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-确认退订此订单吗？(y/n)
-```
+| 接口 | 入参来源 |
+|------|----------|
+| hotel.orderHistory | `memberId` ← 认证上下文 |
+| orderDetail | `orderBaseId` ← 用户选择或订单列表 |
+| orderDeduct | `orderBaseId` ← 上一步<br>`orderItemNo` ← orderDetail 返回的 `data.hotelProductInfo.orderItemNo`<br>`passengerIdList` ← orderDetail 返回的入住人ID列表 |
+| hotel.refund | `amount`、`refundAmount` ← orderDeduct 返回<br>`orderItemNo`、`orderPassengerIds` ← orderDeduct 返回的 `deductItemList[]` |
 
 ---
 
-### 步骤3：收集退订信息
+## 关键参数说明
 
-- 退订原因：询问用户「请问退订原因是什么？」
-
----
-
-### 步骤4：核损（orderDeduct）
-
-调用 `orderDeduct` 接口计算退订手续费和退款金额。
-
-### 🔧 Python 调用命令 - 核损
-
-**命令格式（cmd）**：
-```bash
-python scripts/apiexe.py call --method orderDeduct --arg "{\"orderBaseId\": \"HRO202603101234567890\", \"resourceType\": 1, \"refundType\": 1, \"applyType\": 1, \"reason\": \"行程变更\", \"deductItemList\": [{\"orderItemNo\": \"OI202603101234567890\", \"passengerIdList\": [399]}]}"
-```
-
-**参数说明**：
-- `orderBaseId`: 订单号
-- `resourceType`: 资源类型，酒店传 1
+### orderDeduct（核损）
+- `resourceType`: 1（酒店）
 - `refundType`: 1-全额退订，2-部分退订
-- `applyType`: 申请类型，默认 1
-- `reason`: 退订原因
-- `deductItemList`: 核损项目列表（必填）
-    - `orderItemNo`: 订单项编号（从订单详情获取，取值 `data.hotelProductInfo.orderItemNo`）
-    - `passengerIdList`: 需要退订的入住人ID列表
+- `applyType`: 1（默认）
+- `deductItemList`: 核损项目列表
+  - `orderItemNo`: 订单项编号（从 orderDetail 获取）
+  - `passengerIdList`: 入住人ID列表（数组格式）
 
-**核损结果展示**（润色展示，一行一行展示，勿用表格）：
+### hotel.refund（申请退订）
+- `orderType`: 1（酒店）
+- `applyType`: 1（默认）
+- `refundType`: 1-全额退订，2-部分退订
+- `amount`: 退款金额（从核损结果获取）
+- `originAmount`: 原支付金额（从订单详情获取）
+- `refundItemList`:
+  - `orderItemNo`: 从核损结果的 `deductItemList[].orderItemNo` 获取
+  - `orderPassengerIds`: 从核损结果的 `deductItemList[].passengerIdList` 获取（数组格式）
+  - `refundAmount`: 手续费（从核损结果获取）
 
+---
+
+## 调用命令示例
+
+```bash
+# 订单历史
+python scripts/apiexe.py call --method hotel.orderHistory --arg "{\"memberId\": \"15d6676f6be54d5099b106abeeecfcd6\"}"
+
+# 订单详情
+python scripts/apiexe.py call --method orderDetail --arg "{\"orderBaseId\": \"HRO202603101234567890\"}"
+
+# 核损
+python scripts/apiexe.py call --method orderDeduct --arg "{\"orderBaseId\": \"HRO202603101234567890\", \"resourceType\": 1, \"refundType\": 1, \"applyType\": 1, \"reason\": \"行程变更\", \"deductItemList\": [{\"orderItemNo\": \"OI202603101234567890\", \"passengerIdList\": [399]}]}"
+
+# 申请退订
+python scripts/apiexe.py call --method hotel.refund --arg "{\"orderBaseId\": \"HRO202603101234567890\", \"orderType\": 1, \"applyType\": 1, \"refundType\": 1, \"amount\": 680, \"originAmount\": 796, \"refundReason\": \"行程变更\", \"refundItemList\": [{\"orderItemNo\": \"OI202603101234567890\", \"orderPassengerIds\": [399], \"refundQuantity\": 1, \"refundAmount\": 116}]}"
+```
+
+---
+
+## 展示格式参考
+
+**订单列表**：一行一行展示，格式「订单号 | 酒店 | 入住日期 | 状态 | 金额」
+
+**核损结果**：
 ```
 📊 核损结果
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 订单号：HRO202603101234567890
 酒店：如家酒店(北京天安门广场店)
-房型：标准大床房
 入住日期：2026年3月15日 - 3月17日
 
 退订入住人：
   张三  退款金额：¥680  手续费：¥116
-
-────────────────────────────────────────
-总计：
-  原支付金额：¥796
-  退款金额：¥680
-  手续费：¥116
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-确认核损信息无误后，请回复「确认退订」。
-```
-
----
-
-### 步骤5：用户确认核损
-
-用户确认核损信息后，才进入下一步提交退订申请。
-
----
-
-### 步骤6：提交退订申请（hotel.refund）
-
-调用 `hotel.refund` 接口提交退订申请。
-
-### 🔧 Python 调用命令 - 申请退订
-
-**命令格式（cmd）**：
-```bash
-python scripts/apiexe.py call --method hotel.refund --arg "{\"orderBaseId\": \"HRO202603101234567890\", \"orderType\": 1, \"applyType\": 1, \"refundType\": 1, \"amount\": 680, \"originAmount\": 796, \"refundReason\": \"行程变更\", \"refundItemList\": [{\"orderItemNo\": \"OI202603101234567890\", \"orderPassengerIds\": [399], \"refundQuantity\": 1, \"refundAmount\": 116}]}"
-```
-
-**参数说明**：
-- `orderBaseId`: 订单号（必填）
-- `orderType`: 订单类型，酒店传 1
-- `applyType`: 申请类型，默认 1
-- `refundType`: 退订类型，1-全额退订 2-部分退订
-- `amount`: 退款金额（必填）- 从核损结果获取
-- `originAmount`: 原支付金额（必填）- 从订单详情获取
-- `refundReason`: 退订原因
-- `refundItemList`: 退订明细列表（必填）
-    - `orderItemNo`: 订单项编号（从核损结果的 `deductItemList[].orderItemNo` 获取）
-    - `orderPassengerIds`: 入住人ID列表（从核损结果的 `deductItemList[].passengerIdList` 获取，注意是数组格式）
-    - `refundQuantity`: 本次退订房间数
-    - `refundAmount`: 手续费（从核损结果获取）
-
-**确认话术示例**（润色展示，一行一行展示，勿用表格）：
-
-```
-⚠️ 退订确认
-
-订单号：HRO202603101234567890
-酒店：如家酒店(北京天安门广场店)
-房型：标准大床房
-入住日期：2026年3月15日 - 3月17日
-
-入住人：
-  张三
-
-退订原因：行程变更
-
-核损结果：
-  原支付金额：¥796
-  退款金额：¥680
-  手续费：¥116
-
-预计到账时间：3-7 个工作日
-
-确认申请退订吗？(y/n)
-```
-
-**退订申请提交成功**：
-
-```
-✅ 退订申请已提交
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-订单号：HRO202603101234567890
-退款金额：¥680
-手续费：¥116
-预计到账时间：3-7 个工作日
-
-您可以通过「查询订单状态」查看退订进度。
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
----
-
-## 步骤与数据对照（Agent 内部参考）
-
-| 步骤 | 方法 | 关键入参 | 关键出参 |
-|------|------|----------|----------|
-| 1 | hotel.orderHistory | memberId | 订单列表 |
-| 2 | orderDetail | orderBaseId | orderItemNo, 入住人列表, originAmount |
-| 3 | orderDeduct | orderBaseId, resourceType=1, refundType, deductItemList | 核损结果（含手续费、退款金额等） |
-| 4 | hotel.refund | orderBaseId, orderType=1, applyType=1, refundType, amount, refundReason, refundItemList | 退订申请结果 |
-
----
-
-## 异常处理
-
-### 核心原则
-
-**当后台请求异常时，不要让用户重复提供信息！**
-
-用户已经提供的信息必须记住：
-- ✅ 订单号
-- ✅ 退订原因
-- ✅ 选择的入住人
-
-### 常见错误处理
-
-**1. 核损失败**
-
-```
-❌ 核算退款金额时遇到系统异常
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-我已为您记录的信息：
-  📋 订单号：HRO202603101234567890
-  📝 退订原因：行程变更
-
-🔧 解决方案：
-  ① 稍后 1–2 分钟我再重试
-  ② 手动通过 APP 申请退订
-
-您希望我如何处理？
-```
-
-**2. 退订申请失败**
-
-```
-❌ 退订申请提交失败
-
-可能原因：订单状态已变更、退款条件不满足等。
-
-🔧 解决方案：
-  ① 确认订单状态是否支持退订
-  ② 稍后再试
-  ③ 手动通过 APP 申请退订
-
-需要我帮您查询订单详情吗？
-```
-
-**3. 网络超时**
-
-```
-❌ 网络连接超时，可能是网络不稳定
-
-🔧 解决方案：
-  ① 立即重试
-  ② 稍后 2 分钟再试
-  ③ 手动通过 APP 申请退订
-```
-
----
-
-## 用户体验
-
-### 对话风格
-
-✅ **友好自然**：「好的，我来帮您办理退订。」
-❌ **机械生硬**：「请提供订单号。」
-
-### 后台返回结果润色（重要）
-
-收到后台返回后，**不要直接原样输出**，应润色成用户可读的文案：
-
-- **使用符号**：📋 💰 ⏰ ✅ ❌ ⚠️ 等增强可读性
-- **一行一行展示**：每条信息单独一行，**勿用表格、框线**（`│` `├` `┌` `└` 等），避免在不同界面展示错乱
-- **适当留白**：信息块之间空行分隔，避免拥挤
-- **引导语**：在信息块末尾加简短操作提示
-
----
-
-## 完整对话示例
-
-```
-用户: 我要退订酒店
-
-助手: 好的，我来帮您办理退订。
-
-📋 您的酒店订单历史
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-订单1：
-  订单号：HRO202603101234567890
-  酒店：如家酒店(北京天安门广场店)
-  房型：标准大床房
-  入住：2026年3月15日 - 3月17日
-  状态：✅ 已确认
-  金额：¥796
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-请回复需要退订的订单号。
-
-用户: HRO202603101234567890
-
-助手: 📋 订单详情
-
-订单号：HRO202603101234567890
-酒店：如家酒店(北京天安门广场店)
-房型：标准大床房
-入住：2026年3月15日 - 3月17日
-入住人：张三
-总金额：¥796
-
-确认退订此订单吗？(y/n)
-
-用户: y
-
-助手: 请问退订原因是什么？
-
-用户: 行程变更
-
-助手: 📊 核损结果
-
-订单号：HRO202603101234567890
-酒店：如家酒店(北京天安门广场店)
 
 原支付金额：¥796
 退款金额：¥680
 手续费：¥116
 
 确认核损信息无误后，请回复「确认退订」。
+```
 
-用户: 确认退订
-
-助手: ✅ 退订申请已提交
+**退订成功**：
+```
+✅ 退订申请已提交
 
 订单号：HRO202603101234567890
 退款金额：¥680
@@ -426,6 +103,17 @@ python scripts/apiexe.py call --method hotel.refund --arg "{\"orderBaseId\": \"H
 
 ---
 
-## 执行方式（Agent 内部）
+## 异常处理
 
-识别用户意图后，查阅 [api/hotel-refund.json](../api/hotel-refund.json) 选择对应 method，按 `parameters` 构造 params，使用 `scripts/apiexe.py call --method <method> --arg '<params_json>'` 或 `--arg-file` 执行。**以上为内部执行方式，对用户只说业务话术（如「正在为您核算退款金额」「正在提交退订申请」），不得出现接口名、API、method 等。**
+- **核损失败/退订失败**：保留订单号、退订原因等信息，提示稍后重试或前往中旅旅行App
+- **网络超时**：提示稍后重试
+
+**重要**：异常时不要让用户重复提供信息，已收集的内容必须记住。
+
+---
+
+## 用户体验
+
+- **对话风格**：友好自然，如「好的，我来帮您办理退订」
+- **润色展示**：使用 📋 ✅ ❌ ⚠️ 等符号增强可读性，一行一行展示，勿用表格
+- **禁止技术用语**：对用户说「正在为您核算退款金额」「正在提交退订申请」，不得出现接口名、API、method 等
