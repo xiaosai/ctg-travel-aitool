@@ -431,6 +431,10 @@
           "type": "integer",
           "description": "订单类型，酒店传1"
         },
+        "subOrderType": {
+          "type": "integer",
+          "description": "子订单类型，酒店传1"
+        },
         "cancelReason": {
           "type": "string",
           "description": "取消原因"
@@ -440,7 +444,7 @@
           "description": "终端类型，如 APP"
         }
       },
-      "required": ["orderBaseId"]
+      "required": ["orderBaseId", "subOrderType"]
     }
   },
   {
