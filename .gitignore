@@ -70,3 +70,6 @@ cache/
 
 # Internal docs
 docs/
+
+# Claude Code
+CLAUDE.md
