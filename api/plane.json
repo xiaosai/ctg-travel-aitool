@@ -12,7 +12,7 @@
           "type": "integer",
           "description": "国内/国际类型 默认国内 1：国内 2：国际"
         },
-        "resourceType":{
+        "resourceType": {
           "type": "integer",
           "description": "资源类型 (默认0；飞机=0, 酒店=1, 火车=2, 门票=3)"
         }
@@ -43,7 +43,7 @@
         },
         "fromCity": {
           "type": "string",
-          "description": "出发地"
+          "description": "出发地城市代码（如 WUH 武汉、SHA 上海、BJS 北京）"
         },
         "fromCityType": {
           "type": "integer",
@@ -55,11 +55,11 @@
         },
         "retDate": {
           "type": "string",
-          "description": "回程日期，格式 YYYYMMDD，如 20260306"
+          "description": "回程日期，格式 YYYYMMDD（往返时必填）"
         },
         "toCity": {
           "type": "string",
-          "description": "目的地"
+          "description": "目的地城市代码"
         },
         "toCityType": {
           "type": "integer",
@@ -115,42 +115,12 @@
           "type": "integer",
           "description": "是否直飞，0-不限 1-直飞"
         },
-        "bigModel": {
-          "type": "integer",
-          "description": "机型中含有（大）字样，0-不限 1-是"
-        },
-        "mediumModel": {
-          "type": "integer",
-          "description": "机型中含有（中）字样，0-不限 1-是"
-        },
-        "hiddeShareFlight": {
-          "type": "integer",
-          "description": "隐藏共享航班，0-不限 1-是"
-        },
-        "depAirports": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "出发机场"
-        },
-        "arrAirports": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "到达机场"
-        },
         "airlines": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "description": "航司"
-        },
-        "entranceSource": {
-          "type": "integer",
-          "description": "入口 0-新旅行 1-疗休养"
+          "description": "航司筛选"
         }
       },
       "required": ["cabinGrade", "adultNum", "childNum", "fromCity", "fromCityType", "fromDate", "toCity", "toCityType", "tripType"]
@@ -219,22 +189,6 @@
           "type": "string",
           "description": "旅客姓名（中文）"
         },
-        "pinyinName": {
-          "type": "string",
-          "description": "姓名拼音，格式为 LI SI（姓与名大写、空格分隔）"
-        },
-        "passengerType": {
-          "type": "integer",
-          "description": "旅客类型，0-成人"
-        },
-        "gender": {
-          "type": "integer",
-          "description": "性别，1-男 2-女"
-        },
-        "birthday": {
-          "type": "string",
-          "description": "出生日期，格式 YYYY-MM-DD"
-        },
         "identityType": {
           "type": "string",
           "description": "证件类型，ID-身份证"
@@ -243,21 +197,9 @@
           "type": "string",
           "description": "证件号码"
         },
-        "nationality": {
-          "type": "string",
-          "description": "国籍二字码，如 CN"
-        },
-        "phoneCountryCode": {
-          "type": "string",
-          "description": "手机区号，如 +86"
-        },
         "phoneNumber": {
           "type": "string",
           "description": "手机号码"
-        },
-        "status": {
-          "type": "integer",
-          "description": "状态，0-已删除 1-有效"
         }
       },
       "required": ["passengerName", "identityNo", "phoneNumber"]
@@ -284,17 +226,9 @@
           "type": "string",
           "description": "下单用户手机号码"
         },
-        "distributor": {
-          "type": "integer",
-          "description": "分销商(0-NBS)"
-        },
         "orderSource": {
           "type": "integer",
-          "description": "订单来源(0-APP，1-小程序，2-中移动 3-B转C疗休养)"
-        },
-        "email": {
-          "type": "string",
-          "description": "下单人邮箱"
+          "description": "订单来源(0-APP，1-小程序)"
         },
         "orderType": {
           "type": "integer",
@@ -310,7 +244,7 @@
         },
         "contact": {
           "type": "object",
-          "description": "联系人信息，字段可传空字符串",
+          "description": "联系人信息",
           "properties": {
             "address": { "type": "string", "description": "地址" },
             "email": { "type": "string", "description": "邮箱" },
@@ -333,7 +267,7 @@
         },
         "totalAmount": {
           "type": "number",
-          "description": "总金额（如 票面+机建+燃油=970）"
+          "description": "总金额（票面+机建+燃油）"
         },
         "payAmount": {
           "type": "number",
@@ -341,11 +275,11 @@
         },
         "departureCityId": {
           "type": "string",
-          "description": "出发城市id，如 4"
+          "description": "出发城市id"
         },
         "destinationCityId": {
           "type": "string",
-          "description": "目的地城市id，如 785"
+          "description": "目的地城市id"
         },
         "items": {
           "type": "array",
@@ -355,9 +289,9 @@
             "properties": {
               "resourceItemId": { "type": "string", "description": "资源项id，取自 cabinList" },
               "goExtData": { "type": "string", "description": "舱位详情中的 extData 整段 JSON 字符串" },
+              "sessionId": { "type": "string", "description": "cabinList 返回的 sessionId" },
               "adultNum": { "type": "integer", "description": "成人数量" },
               "childNum": { "type": "integer", "description": "儿童数量" },
-              "sessionId": { "type": "string", "description": "cabinList 返回的 sessionId" },
               "adultSalePrice": { "type": "number", "description": "成人销售价" },
               "adultAirportFee": { "type": "number", "description": "成人机建费" },
               "adultOilFee": { "type": "number", "description": "成人燃油费" },
@@ -377,43 +311,33 @@
                     "idType": { "type": "string", "description": "证件类型如 ID" },
                     "phoneNumber": { "type": "string", "description": "手机号" },
                     "customerType": { "type": "string", "description": "0-成人" },
-                    "birthday": { "type": "string", "description": "生日 YYYY-MM-DD" },
-                    "gender": { "type": "string", "description": "可空" },
-                    "nationality": { "type": "string", "description": "可空" },
-                    "pinyinname": { "type": "string", "description": "可空" }
+                    "birthday": { "type": "string", "description": "生日 YYYY-MM-DD" }
                   }
                 }
               },
-              "departCityName": { "type": "string", "description": "出发城市名如北京" },
-              "departCityCode": { "type": "string", "description": "出发城市码如 BJS" },
-              "arriveCityName": { "type": "string", "description": "到达城市名如上海" },
-              "arriveCityCode": { "type": "string", "description": "到达城市码如 SHA" },
-              "quantity": { "type": "integer", "description": "数量 1" },
+              "departCityName": { "type": "string", "description": "出发城市名" },
+              "departCityCode": { "type": "string", "description": "出发城市码" },
+              "arriveCityName": { "type": "string", "description": "到达城市名" },
+              "arriveCityCode": { "type": "string", "description": "到达城市码" },
+              "quantity": { "type": "integer", "description": "数量" },
               "rangeType": { "type": "integer", "description": "航程类型 1-去程 2-返程" },
-              "contact": {
-                "type": "object",
-                "description": "本段联系人，字段可空",
-                "properties": {
-                  "address": { "type": "string" },
-                  "email": { "type": "string" },
-                  "name": { "type": "string" },
-                  "phone": { "type": "string" },
-                  "postcode": { "type": "string" }
-                }
-              },
               "departureDate": { "type": "string", "description": "出发日期 YYYY-MM-DD" },
               "departureTime": { "type": "string", "description": "起飞时间如 07:25" },
-              "flightNumber": { "type": "string", "description": "航班号如 HU7601" },
+              "flightNumber": { "type": "string", "description": "航班号" },
               "departureCityName": { "type": "string", "description": "出发城市名" },
-              "arrivalCityName": { "type": "string", "description": "到达城市名" }
+              "arrivalCityName": { "type": "string", "description": "到达城市名" },
+              "contact": {
+                "type": "object",
+                "description": "本段联系人",
+                "properties": {
+                  "phone": { "type": "string", "description": "联系人手机号" }
+                }
+              }
             }
           }
         }
       },
-      "required": ["memberId", "phoneNumber", "orderSource", "orderType", "subOrderType", "tripType", "fromDate", "totalAmount", "payAmount", "items", "contact", "departureCityId", "destinationCityId"
-      , "resourceItemId","sessionId","goExtData","adultNum","childNum","adultSalePrice","adultAirportFee","adultOilFee","childSalePrice","childAirportFee",
-        "childOilFee","cabinGrade"
-      ]
+      "required": ["memberId", "phoneNumber", "orderSource", "orderType", "subOrderType", "tripType", "fromDate", "totalAmount", "payAmount", "items", "contact", "departureCityId", "destinationCityId"]
     }
   },
   {
@@ -434,8 +358,25 @@
     }
   },
   {
+    "method": "orderDetail",
+    "description": "获取订单详情",
+    "category": "ORDER",
+    "subCategory": "COMMON",
+    "action": "QUERY",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "orderBaseId": {
+          "type": "string",
+          "description": "订单号"
+        }
+      },
+      "required": ["orderBaseId"]
+    }
+  },
+  {
     "method": "flight.cancelOrder",
-    "description": "取消机票订单",
+    "description": "取消机票订单（仅未支付）",
     "category": "ORDER",
     "subCategory": "COMMON",
     "action": "CANCEL",
@@ -453,15 +394,9 @@
         "cancelReason": {
           "type": "string",
           "description": "取消原因"
-        },
-        "terminalCode": {
-          "type": "string",
-          "description": "终端类型，如 APP"
         }
       },
-      "required": [
-        "orderBaseId"
-      ]
+      "required": ["orderBaseId"]
     }
   },
   {
@@ -479,143 +414,6 @@
         }
       },
       "required": ["memberId"]
-    }
-  },
-  {
-    "method": "orderDeduct",
-    "description": "机票订单核损（退票前必调）",
-    "category": "ORDER",
-    "subCategory": "COMMON",
-    "action": "DEDUCT",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "orderBaseId": {
-          "type": "string",
-          "description": "订单编号"
-        },
-        "resourceType": {
-          "type": "integer",
-          "description": "资源类型，默认0（机票）"
-        },
-        "refundType": {
-          "type": "integer",
-          "description": "退款类型 1-整单退 2-部分退"
-        },
-        "applyType": {
-          "type": "integer",
-          "description": "退款类型 0-自愿退票 1-非自愿退票，默认0"
-        },
-        "reason": {
-          "type": "string",
-          "description": "退票原因"
-        },
-        "reasonType": {
-          "type": "integer",
-          "description": "原因类型"
-        },
-        "deductItemList": {
-          "type": "array",
-          "description": "核损项目列表（必填）",
-          "items": {
-            "type": "object",
-            "properties": {
-              "orderItemNo": {
-                "type": "string",
-                "description": "订单项编号（order item no）"
-              },
-              "passengerIdList": {
-                "type": "array",
-                "description": "需要退票的乘客ID列表（必填）",
-                "items": {
-                  "type": "string"
-                }
-              }
-            },
-            "required": ["orderItemNo", "passengerIdList"]
-          }
-        }
-      },
-      "required": ["orderBaseId", "resourceType", "refundType", "deductItemList"]
-    }
-  },
-  {
-    "method": "flight.refund",
-    "description": "申请机票退票",
-    "category": "ORDER",
-    "subCategory": "FLIGHT",
-    "action": "REFUND",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "orderBaseId": {
-          "type": "string",
-          "description": "订单号"
-        },
-        "orderType": {
-          "type": "integer",
-          "description": "订单类型 默认值0(机票)"
-        },
-        "applyType": {
-          "type": "integer",
-          "description": "申请类型，默认1"
-        },
-        "refundType": {
-          "type": "integer",
-          "description": "退票类型 1-全额退票（全退） 2-部分退票（部分乘客退）"
-        },
-        "amount": {
-          "type": "number",
-          "description": "退款金额"
-        },
-        "refundReason": {
-          "type": "string",
-          "description": "退票原因"
-        },
-        "refundItemList": {
-          "type": "array",
-          "description": "退票明细列表",
-          "items": {
-            "type": "object",
-            "properties": {
-              "orderItemNo": {
-                "type": "string",
-                "description": "订单项编号（order item no）"
-              },
-              "passengerIdList": {
-                "type": "array",
-                "description": "需要退票的乘客ID列表（必填）",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "refundQuantity": {
-                "type": "integer",
-                "description": "本次退票退几张票"
-              }
-            },
-            "required": ["orderItemNo", "passengerIdList", "refundQuantity"]
-          }
-        }
-      },
-      "required": ["orderBaseId", "orderType", "applyType", "refundType", "amount", "refundItemList"]
-    }
-  },
-  {
-    "method": "orderDetail",
-    "description": "获取订单详情",
-    "category": "ORDER",
-    "subCategory": "COMMON",
-    "action": "QUERY",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "orderBaseId": {
-          "type": "string",
-          "description": "订单号"
-        }
-      },
-      "required": ["orderBaseId"]
     }
   }
 ]
