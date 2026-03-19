@@ -2,6 +2,8 @@
 
 **触发条件**：退订/退款酒店
 
+> **接口文档**：调用接口前请查阅 [api/hotel-refund.json](../api/hotel-refund.json)，获取完整的 method、category、subCategory、action 及参数定义。
+
 ---
 
 ## 核心流程
