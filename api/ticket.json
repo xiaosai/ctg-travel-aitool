@@ -305,6 +305,10 @@
           "type": "integer",
           "description": "订单类型，传3（门票）"
         },
+        "subOrderType": {
+          "type": "string",
+          "description": "子订单类型，固定传：DOMESTIC_TICKET"
+        },
         "cancelReason": {
           "type": "string",
           "description": "取消原因"
