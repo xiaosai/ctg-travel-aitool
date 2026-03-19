@@ -17,29 +17,6 @@
 
 ---
 
-## 退票场景智能识别
-
-**用户表达意图识别**：
-
-| 用户输入 | refundType | 说明 |
-|---------|-----------|------|
-| 「退票」「我要退票」「取消这张火车票」 | 1（全额退票） | 未指定乘客，默认全退 |
-| 「全退」「全部退票」「三个人都要退」 | 1（全额退票） | 明确全额退票 |
-| 「张三退票」「退张三的票」 | 2（部分退票） | 指定了单个乘客 |
-| 「张三和李四退票」「退张三和李四」 | 2（部分退票） | 指定了部分乘客 |
-| 「只退王五」「王五一个人退票」 | 2（部分退票） | 指定了单个乘客 |
-
-**处理流程**：
-
-1. 识别用户意图 → 判断是否为退票场景
-2. 获取订单信息（orderHistory 或 orderDetail）
-3. 根据用户输入判断 refundType：
-   - 全退：所有乘客纳入 orderPassengerIds
-   - 部分退：仅用户指定的乘客纳入 orderPassengerIds
-4. 计算或确认退款金额（必填）
-5. 向用户确认后提交
-
----
 
 ## 核心步骤与数据流（Agent 内部参考，勿对用户说）
 
@@ -92,16 +69,10 @@
 
 ### 🔧 Python 调用命令
 
-**命令格式（cmd）**：
+**命令格式**：
 
 ```bash
 python scripts/apiexe.py call --method train.search --arg "{\"fromStation\": \"上海\", \"fromCityType\": 2, \"toStation\": \"北京\", \"toCityType\": 2, \"ticketDate\": \"2026-03-18\"}"
-```
-
-**命令格式（PowerShell）**：
-
-```powershell
-python scripts/apiexe.py call --method train.search --arg-file temp/trainlist_params.json
 ```
 
 **展示格式示例**（接口返回后润色展示，一行一行展示，勿用表格）：
@@ -143,16 +114,10 @@ G105 武汉 10:30 → 长沙南 11:45  1h15m  ⚡ 最快
 
 ### 🔧 Python 调用命令
 
-**命令格式（cmd）**：
+**命令格式**：
 
 ```bash
 python scripts/apiexe.py call --method train.detail --arg "{"fromStation": "上海", "toStation": "北京", "ticketDate": "2026-03-18", "trainNo": "G101", "entranceSource": 0}"
-```
-
-**命令格式（PowerShell）**：
-
-```powershell
-python scripts/apiexe.py call --method train.detail --arg-file temp/traindetail_params.json
 ```
 
 **展示格式示例**（接口返回后润色展示，一行一行展示，勿用表格）：
@@ -175,23 +140,17 @@ python scripts/apiexe.py call --method train.detail --arg-file temp/traindetail_
 
 ### 🔧 Python 调用命令
 
-**命令格式（cmd）**：
+**命令格式**：
 
 ```bash
 python scripts/apiexe.py call --method getPassengerList --arg "{"orderType": 2}"
 ```
-
-**命令格式（PowerShell）**：
-
-```powershell
-python scripts/apiexe.py call --method getPassengerList --arg-file temp/passengerlist_params.json
-```
-
 **参数说明**：
 
 - `orderType`: 订单类型，默认 2（火车票）
 
 **展示格式示例**（接口返回后润色展示，一行一行展示，勿用表格）：
+展示乘客列表字段：passengerName(passengerType)、phoneNumber，手机号phoneNumber中间四位替换为****
 
 ```
 👥 请选择乘车人（可多选）
@@ -223,18 +182,11 @@ python scripts/apiexe.py call --method getPassengerList --arg-file temp/passenge
 
 ### 🔧 Python 调用命令 - 新增乘客
 
-**命令格式（cmd）**：
+**命令格式**：
 
 ```bash
 python scripts/apiexe.py call --method savePassenger --arg "{"passengerName": "张三", "identityType": "ID", "identityNo": "420102199007015297", "phoneNumber": "15629199695"}"
 ```
-
-**命令格式（PowerShell）**：
-
-```powershell
-python scripts/apiexe.py call --method savePassenger --arg-file temp/savepassenger_params.json
-```
-
 **保存乘客必填项**（以 [api/train.json](../api/train.json) 为准）：旅客姓名、证件/身份证号、手机号码。其他字段可选不传。
 
 **对用户的引导**：只问三项——「请问乘客姓名？」「请输入身份证号」「请输入手机号」。收集完整后执行保存。
@@ -273,19 +225,12 @@ python scripts/apiexe.py call --method savePassenger --arg-file temp/savepasseng
 | seatTypeName| string | 座位类型名称 |
 | parentId | long | 绑定成人ID (仅免费儿童有效) |
 
-
 ### 🔧 Python 调用命令
 
-**命令格式（cmd）**：
+**命令格式**：
 
 ```bash
 python scripts/apiexe.py call --method train.createOrder --arg "{\"orderSource\":0,\"orderType\":2,\"subOrderType\":\"DOMESTIC_TRAIN\",\"orderItem\":{\"hasSeat\":false,\"resourceItemId\":\"RW12ff1d2df9da42567f1b939bbfefe481\",\"fromDate\":\"2026-02-12\",\"seatTypeName\":\"无座\",\"adultSalePrice\":298,\"childSalePrice\":149,\"passengers\":[{\"passengerId\":316,\"passengerType\":0,\"seatTypeName\":\"无座\",\"parentId\":null,\"idNumber\":\"420115199001010101\",\"phoneNumber\":\"18872233316\",\"name\":\"张飞\"}]}}"
-```
-
-**命令格式（PowerShell）**：
-
-```powershell
-python scripts/apiexe.py call --method train.createOrder --arg-file temp/createorder_params.json
 ```
 
 **重要**：创建订单成功后，订单处于**占位中**状态，此时**必须**进入第六阶段轮询订单状态，根据轮询结果再决定后续反馈，切勿直接提示用户支付。
@@ -312,18 +257,11 @@ python scripts/apiexe.py call --method train.createOrder --arg-file temp/createo
 
 ### 🔧 Python 调用命令
 
-**命令格式（cmd）**：
+**命令格式**：
 
 ```bash
 python scripts/apiexe.py call --method getOrderStatus --arg "{"orderBaseId": "SRO202603091138018328863"}"
 ```
-
-**命令格式（PowerShell）**：
-
-```powershell
-python scripts/apiexe.py call --method getOrderStatus --arg-file temp/orderstatus_params.json
-```
-
 **参数说明**：
 
 - `orderBaseId`: 订单号（从创建订单返回获取）
@@ -397,18 +335,11 @@ python scripts/apiexe.py call --method getOrderStatus --arg-file temp/orderstatu
 
 ### 🔧 Python 调用命令
 
-**命令格式（cmd）**：
+**命令格式**：
 
 ```bash
 python scripts/apiexe.py call --method train.cancelOrder --arg "{"orderBaseId": "SRO202603091138018328863", "orderType": 0, "cancelReason": "不需要了", "terminalCode": "APP"}"
 ```
-
-**命令格式（PowerShell）**：
-
-```powershell
-python scripts/apiexe.py call --method train.cancelOrder --arg-file temp/cancelorder_params.json
-```
-
 **参数说明**：
 
 - `orderBaseId`: 订单号（必填）
@@ -447,18 +378,11 @@ python scripts/apiexe.py call --method train.cancelOrder --arg-file temp/cancelo
 
 ### 🔧 Python 调用命令
 
-**命令格式（cmd）**：
+**命令格式**：
 
 ```bash
 python scripts/apiexe.py call --method orderHistory --arg "{"memberId": "15d6676f6be54d5099b106abeeecfcd6"}"
 ```
-
-**命令格式（PowerShell）**：
-
-```powershell
-python scripts/apiexe.py call --method orderHistory --arg-file temp/orderhistory_params.json
-```
-
 **参数说明**：
 
 - `memberId`: 会员ID（从认证上下文中获取，通常无需询问）
@@ -502,18 +426,11 @@ python scripts/apiexe.py call --method orderHistory --arg-file temp/orderhistory
 
 ### 🔧 Python 调用命令
 
-**命令格式（cmd）**：
+**命令格式**：
 
 ```bash
 python scripts/apiexe.py call --method orderDetail --arg "{"orderBaseId": "FRO202603101234567890"}"
 ```
-
-**命令格式（PowerShell）**：
-
-```powershell
-python scripts/apiexe.py call --method orderDetail --arg-file temp/orderdetail_params.json
-```
-
 **参数说明**：
 
 - `orderBaseId`: 订单号（如 FRO202603101234567890）
@@ -570,200 +487,6 @@ python scripts/apiexe.py call --method orderDetail --arg-file temp/orderdetail_p
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 如需退票，请回复「退票」。
-```
-
-### 第十一阶段：申请退票
-
-当用户表达"退票"、"我要退票"、"申请退款"等意图时，按顺序调用 `orderHistory`、`orderDetail`、`orderDeduct`（核损）、`train.refund`。必填字段按接口文档，缺则提示。
-
-**触发场景**：
-
-- 用户说「退票」
-- 用户说「我要申请退款」
-- 用户说「取消这张机票」
-- 用户说「张三要退票」或「张三和李四要退票」
-
-**流程**：
-
-**步骤1：确认订单号**
-
-- 如果用户未提供订单号，先调用 `orderHistory` 获取订单列表，让用户选择
-- 或者询问用户订单号
-
-**步骤2：获取订单详情**
-
-- 调用 `orderDetail` 获取订单信息，包括：
-  - 乘客列表（passengerId、passengerName、ticketNo）
-  - 订单项编号（orderItemNo）
-  - 车次信息
-- 展示订单信息供用户确认
-
-**步骤3：判断退票类型**
-
-- **refundType = 1（全额退票）**：用户未明确指定乘客，或说「全退」、「全部退票」
-- **refundType = 2（部分退票）**：用户明确指定了部分乘客，如「张三退票」、「张三和李四退票」
-
-**步骤4：收集退票信息**
-
-- **全退场景**（refundType=1）：
-  
-  - 无需询问乘客，自动包含所有乘客
-  - 退票原因：询问用户「退票原因是什么？」
-- **部分退票场景**（refundType=2）：
-  
-  - 确认要退票的乘客：「请确认要退票的乘客：张三、李四」
-  - 退票原因：询问用户「退票原因是什么？」
-
-**步骤5：核损（orderDeduct）**
-
-- 调用 `orderDeduct` 接口计算退票手续费和退款金额
-
-### 🔧 Python 调用命令 - 核损
-
-**命令格式（cmd）**：
-
-```bash
-python scripts/apiexe.py call --method orderDeduct --arg "{"orderBaseId": "SRO202603091138018328863", "resourceType": 2, "refundType": 1, "applyType": 0, "reason": "行程变更", "deductItemList": [{"orderItemNo": "OI202603091441449321207", "passengerIdList": ["399"]}]}"
-```
-
-**命令格式（PowerShell）**：
-
-```powershell
-python scripts/apiexe.py call --method orderDeduct --arg-file temp/orderdeduct_params.json
-```
-
-**参数说明**：
-
-- `orderBaseId`: 订单号
-- `resourceType`: 资源类型，默认 2（火车票）
-- `refundType`: 1-整单退，2-部分退
-- `applyType`: 0-自愿退票，1-非自愿退票，默认 0
-- `reason`: 退票原因
-- `deductItemList`: 核损项目列表（必填）
-  - `orderItemNo`: 订单项编号（从订单详情获取 取值`data.trainProductInfos.orderItemNo`）
-  - `passengerIdList`: 需要退票的乘客ID列表(必填 从订单详情获取 取值 `data.trainProductInfos.trainTicketInfo.passengerId`)
-    
-    * 全额退票：包含订单中所有乘客ID
-    * 部分退票：只包含用户指定的乘客ID
-
-**核损结果展示**（润色展示，一行一行展示，勿用表格）：
-
-```
-📊 核损结果
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-订单号：FRO202603101234567890
-车次：G101 北京 → 上海
-日期：2026年3月10日 08:00 → 10:15
-
-退票乘客：
-  张三 退票金额：¥580  手续费：¥100
-  李四 退票金额：¥580  手续费：¥100
-  王五 退票金额：¥580  手续费：¥100
-
-────────────────────────────────────────
-总计：
-  原支付金额：¥2040
-  退款金额：¥1740
-  手续费：¥300
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-确认核损信息无误后，请回复「确认退票」。
-```
-
-**步骤6：用户确认核损**
-
-- 用户确认核损信息后，才进入下一步提交退票申请
-
-**步骤7：提交退票申请（train.refund）**
-
-- 调用 `train.refund` 接口提交退票申请
-
-### 🔧 Python 调用命令 - 申请退票
-
-**命令格式（cmd）**：
-
-```bash
-python scripts/apiexe.py call --method train.refund --arg "{"orderBaseId": "SRO202603091138018328863", "refundType": 1, "amount": 479, "originAmount": 479, "orderPassengerIds": [316]}"
-```
-
-**命令格式（PowerShell）**：
-
-```powershell
-python scripts/apiexe.py call --method flight.refund --arg-file temp/trainrefund_params.json
-```
-
-**参数说明**：
-
-- `orderBaseId`: 订单号（必填）
-- `refundType`: 1-全额退票，2-部分退票（必填）
-- `orderItemNo`: 订单项编号（从订单详情获取 取值从核损的`ddeductItemList[].orderItemNo`获取）
-- `amount`: 从核损的`trainDeductInfo.totalRefundAmount`获取（退款金额）
-- `originAmount`: 原金额
-- `orderPassengerIds`: 订单使用人
-
-**确认话术示例 - 全额退票**（润色展示，一行一行展示，勿用表格）：
-
-```
-⚠️ 退票确认
-
-订单号：FRO202603101234567890
-车次：G01 北京 → 上海
-日期：2026年3月10日 08:00 → 10:15
-
-乘客：
-  张三（票号：7891234567890）
-  李四（票号：7891234567891）
-  王五（票号：7891234567892）
-
-核损结果：
-  退款金额：¥1740
-  手续费：¥300
-
-确认申请全额退票吗？(y/n)
-```
-
-**确认话术示例 - 部分退票**（润色展示，一行一行展示，勿用表格）：
-
-```
-⚠️ 退票确认
-
-订单号：FRO202603101234567890
-车次：G101 北京 → 上海
-日期：2026年3月10日 08:00 → 10:15
-
-退票乘客：
-  张三（票号：7891234567890）
-  李四（票号：7891234567891）
-
-保留乘客：
-  王五（票号：7891234567892）
-
-退票类型：部分退票
-
-核损结果：
-  退款金额：¥1160
-  手续费：¥200
-
-确认申请部分退票吗？(y/n)
-```
-
-**退票申请提交成功**：
-
-```
-✅ 退票申请已提交
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-订单号：FRO202603101234567890
-退款金额：¥1740
-预计到账时间：3-7 个工作日
-
-您可以通过「查询订单状态」查看退票进度。
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 ## 异常处理
