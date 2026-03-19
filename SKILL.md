@@ -47,7 +47,8 @@ examples:
 |--------|----------------------------------|----------|----------|
 | **火车** | 买火车票、订火车票、买高铁票、动车票、预定武汉-北京火车票、查询火车票/高铁票、去上海有什么车次、坐 G101 去北京 | [guide/train.md](guide/train.md) | [api/train.json](api/train.json) |
 | **机票** | 买机票、订机票、买飞机票、预定北京-上海机票、查询航班/机票、明天飞杭州有什么航班、坐飞机去广州 | [guide/plane.md](guide/plane.md) | [api/plane.json](api/plane.json) |
-| **酒店** | 预订酒店、订酒店、订房 | [guide/hotel.md](guide/hotel.md) | [api/hotel.json](api/hotel.json) |
+| **酒店** | 预订酒店、订酒店、订房、酒店订单、我的酒店订单、取消订单（未支付） | [guide/hotel.md](guide/hotel.md) | [api/hotel.json](api/hotel.json) |
+| **酒店退订** | 退订酒店、酒店退款、申请退款、我要退订 | [guide/hotel-refund.md](guide/hotel-refund.md) | [api/hotel-refund.json](api/hotel-refund.json) |
 | **门票** | 购买门票、订门票、景区门票 | [guide/ticket.md](guide/ticket.md) | [api/ticket.json](api/ticket.json) |
 
 **按需加载**：若用户说「我要买火车票」→ 仅加载 `guide/train.md` 和 `api/train.json`，按该指南执行。若用户说「查一下明天北京到上海的航班」→ 仅加载 `guide/plane.md` 和 `api/plane.json`。未涉及到的资源线不加载其 guide。
@@ -125,6 +126,7 @@ examples:
 - 火车意图 → 加载 [guide/train.md](guide/train.md) + [api/train.json](api/train.json)
 - 机票意图 → 加载 [guide/plane.md](guide/plane.md) + [api/plane.json](api/plane.json)
 - 酒店意图 → 加载 [guide/hotel.md](guide/hotel.md) + [api/hotel.json](api/hotel.json)
+- 酒店退订意图 → 加载 [guide/hotel-refund.md](guide/hotel-refund.md) + [api/hotel-refund.json](api/hotel-refund.json)
 - 门票意图 → 加载 [guide/ticket.md](guide/ticket.md) + [api/ticket.json](api/ticket.json)
 
 按加载后的操作指南引导用户输入必填参数，再发起请求。**对用户说的每一句话都必须是业务话术，不得出现接口名、API、调用等技术用语。**
@@ -170,13 +172,15 @@ travel-project/
 ├── guide/
 │   ├── train.md            # 火车票操作指南
 │   ├── plane.md            # 机票操作指南
-│   ├── hotel.md            # 酒店操作指南
+│   ├── hotel.md            # 酒店预订操作指南
+│   ├── hotel-refund.md     # 酒店退订操作指南
 │   └── ticket.md           # 门票操作指南
 ├── scripts/
 │   └── apiexe.py           # 统一接口调用脚本（火车票等）
 └── api/
     ├── train.json          # 火车接口文档
     ├── plane.json          # 机票接口文档
-    ├── hotel.json          # 酒店接口文档
+    ├── hotel.json          # 酒店预订接口文档
+    ├── hotel-refund.json   # 酒店退订接口文档
     └── ticket.json         # 门票接口文档
 ```
