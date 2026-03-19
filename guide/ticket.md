@@ -8,15 +8,20 @@
 
 ```
 1. cityList(resourceType=3) → 获取城市列表，得到 cityId、cityName
-2. poi-list → 查询景点列表，入参：destinationCityId、destinationCityName、keyword、current=1、size=15
+2. poi-list → 查询景点列表，入参：destinationCityId、destinationCityName、keyword、current=1、size=10
 3. poiDetail → 获取景点详情，入参：poiId(sourcePoiId)、ticketDate(可选)
 4. poiRule → 门票规则，入参：resourceId(ticketList中选中项)
 5. getPassengerList(orderType=3) → 乘客列表；无乘客则调用 savePassenger 新增
 6. createTicketOrder → 创建订单，入参：resourceItemId、quantity、price、totalPrice、travelDate、travellerInfoList
-7. orderDetail/getOrderStatus → 查询订单详情与状态
-8. ticket.cancelOrder → 取消未支付订单（仅仅取消未支付订单，如果用户已经购买了门票，需要走退票流程）
-9. orderHistory → 获取历史订单
+7. getOrderStatus → 查询订单状态
+8. orderDetail → 查询订单详情
+9. ticket.cancelOrder → 取消未支付订单（仅仅取消未支付订单，如果用户已经购买了门票，需要走退票流程）
+10. orderHistory → 获取历史订单
 ```
+
+## 退票流程
+
+- 当用户明确表达退票、我要退票、申请退款、把刚刚预定的门票退了、取消这张门票（已支付）意图时，加载 [guide/ticket-refund.md](ticket-refund.md)
 
 ---
 
@@ -51,7 +56,7 @@
 python scripts/apiexe.py call --method cityList --arg "{\"domesticType\": 1, \"resourceType\": 3}"
 
 # 景点列表（必填：destinationCityName）
-python scripts/apiexe.py call --method poi-list --arg "{\"destinationCityId\": 1, \"destinationCityName\": \"北京\", \"keyword\": \"故宫\", \"current\": 1, \"size\": 15}"
+python scripts/apiexe.py call --method poi-list --arg "{\"destinationCityId\": 1, \"destinationCityName\": \"北京\", \"keyword\": \"故宫\", \"current\": 1, \"size\": 10}"
 
 # 景点详情（必填：poiId）
 python scripts/apiexe.py call --method poiDetail --arg "{\"poiId\": 123456}"
@@ -67,6 +72,9 @@ python scripts/apiexe.py call --method savePassenger --arg "{\"passengerName\": 
 
 # 创建订单（必填：phoneNumber、orderSource、resourceItemId、quantity、price、totalPrice、travelDate、travellerInfoList、name、mobile）
 python scripts/apiexe.py call --method createTicketOrder --arg "{\"resourceItemId\": \"xxx\", \"quantity\": 1, \"price\": 60, \"totalPrice\": 60, \"travelDate\": \"2026-03-15\", \"phoneNumber\": \"13800138000\", \"name\": \"张三\", \"mobile\": \"13800138000\", \"orderSource\": 0, \"travellerInfoList\": [{\"passengerId\": 1, \"name\": \"张三\", \"idNumber\": \"420102199007015297\", \"idType\": \"ID\", \"phoneNumber\": \"13800138000\"}]}"
+
+# 订单状态（必填：orderBaseId）
+python scripts/apiexe.py call --method getOrderStatus --arg "{\"orderBaseId\": \"TRO202603151234567890\"}"
 
 # 订单详情（必填：orderBaseId）
 python scripts/apiexe.py call --method orderDetail --arg "{\"orderBaseId\": \"TRO202603151234567890\"}"
@@ -112,7 +120,3 @@ python scripts/apiexe.py call --method orderHistory --arg "{\"current\": 1, \"si
 **重要**：异常时不要让用户重复提供信息，已选择的内容必须记住。
 
 ---
-
-## 退票流程
-
-- 当用户明确表达退票、我要退票、申请退款、把刚刚预定的门票退了、取消这张门票（已支付）意图时，加载 [guide/ticket-refund.md](ticket-refund.md)
