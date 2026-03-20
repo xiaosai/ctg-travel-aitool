@@ -31,30 +31,9 @@
         "reasonType": {
           "type": "integer",
           "description": "原因类型"
-        },
-        "deductItemList": {
-          "type": "array",
-          "description": "核损项目列表（必填）",
-          "items": {
-            "type": "object",
-            "properties": {
-              "orderItemNo": {
-                "type": "string",
-                "description": "订单项编号（从订单详情获取，取值 data.hotelProductInfo.orderItemNo）"
-              },
-              "passengerIdList": {
-                "type": "array",
-                "description": "需要退订的入住人ID列表（必填）",
-                "items": {
-                  "type": "integer"
-                }
-              }
-            },
-            "required": ["orderItemNo", "passengerIdList"]
-          }
         }
       },
-      "required": ["orderBaseId", "resourceType", "refundType", "deductItemList"]
+      "required": ["orderBaseId", "resourceType", "refundType"]
     }
   },
   {
@@ -76,7 +55,7 @@
         },
         "orderItemNo": {
           "type": "string",
-          "description": "订单明细编号（从核损结果的 deductItemList[].orderItemNo 获取）"
+          "description": "订单明细编号（从核损结果的获取 orderItemNo）"
         },
         "refundType": {
           "type": "integer",
