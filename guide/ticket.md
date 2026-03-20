@@ -7,16 +7,15 @@
 ## 核心流程
 
 ```
-1. cityList(resourceType=3) → 获取城市列表，得到 cityId、cityName
-2. poi-list → 查询景点列表，入参：destinationCityId、destinationCityName、keyword、current=1、size=10
-3. poiDetail → 获取景点详情，入参：poiId(sourcePoiId)、ticketDate(可选)
-4. poiRule → 门票规则，入参：resourceId(ticketList中选中项)
-5. getPassengerList(orderType=3) → 乘客列表；无乘客则调用 savePassenger 新增
-6. createTicketOrder → 创建订单，入参：resourceItemId、quantity、price、totalPrice、travelDate、travellerInfoList
-7. getOrderStatus → 查询订单状态
-8. orderDetail → 查询订单详情
-9. ticket.cancelOrder → 取消未支付订单（仅仅取消未支付订单，如果用户已经购买了门票，需要走退票流程）
-10. orderHistory → 获取历史订单
+1. poi-list → 查询景点列表，入参：destinationCityName、keyword、current=1、size=10
+2. poiDetail → 获取景点详情，入参：poiId(sourcePoiId)、ticketDate(可选)
+3. poiRule → 门票规则，入参：resourceId(ticketList中选中项)
+4. getPassengerList(orderType=3) → 乘客列表；无乘客则调用 savePassenger 新增
+5. createTicketOrder → 创建订单，入参：resourceItemId、quantity、price、totalPrice、travelDate、travellerInfoList
+6. getOrderStatus → 查询订单状态
+7. orderDetail → 查询订单详情
+8. ticket.cancelOrder → 取消未支付订单（仅仅取消未支付订单，如果用户已经购买了门票，需要走退票流程）
+9. orderHistory → 获取历史订单
 ```
 
 ## 退票流程
@@ -27,11 +26,11 @@
 
 ## 参数传递依赖
 
-| 接口 | 入参来源 |
-|------|----------|
-| poi-list | `destinationCityId`、`destinationCityName` ← cityList 返回的 `cityId`、`cityName` |
-| poiDetail | `poiId` ← poi-list 返回的 `sourcePoiId` |
-| poiRule | `resourceId` ← poiDetail 返回的 `ticketList[].resourceId` |
+| 接口 | 入参来源                                                                                                                                                |
+|------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| poi-list | `destinationCityName` ← 用户 输入的 `城市名称`                                                                                                       |
+| poiDetail | `poiId` ← poi-list 返回的 `sourcePoiId`                                                                                                                |
+| poiRule | `resourceId` ← poiDetail 返回的 `ticketList[].resourceId`                                                                                              |
 | createTicketOrder | `resourceItemId` ← poiDetail 返回的 `ticketList[].resourceItemId`<br>`price` ← `ticketList[].sellPrice`<br>`travellerInfoList` ← getPassengerList 返回的乘客信息 |
 
 ---
@@ -52,9 +51,6 @@
 ### 调用命令示例
 
 ```bash
-# 城市列表
-python scripts/apiexe.py call --method cityList --arg "{\"domesticType\": 1, \"resourceType\": 3}"
-
 # 景点列表（必填：destinationCityName）
 python scripts/apiexe.py call --method poi-list --arg "{\"destinationCityId\": 1, \"destinationCityName\": \"北京\", \"keyword\": \"故宫\", \"current\": 1, \"size\": 10}"
 

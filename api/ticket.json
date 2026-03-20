@@ -1,62 +1,19 @@
 [
   {
-    "method": "cityList",
-    "description": "城市列表",
-    "category": "RESOURCE",
-    "subCategory": "COMMON",
-    "action": "CITY",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "domesticType": {
-          "type": "integer",
-          "description": "国内/国际类型 默认国内 1：国内 2：国际"
-        },
-        "resourceType": {
-          "type": "integer",
-          "description": "资源类型 (默认0；飞机=0, 酒店=1, 火车=2, 门票=3)"
-        }
-      },
-      "required": []
-    }
-  },
-  {
     "method": "poi-list",
     "description": "景点列表",
     "category": "RESOURCE",
     "subCategory": "TICKET",
     "action": "SEARCH",
     "parameters": {
-      "type": "object",
       "properties": {
-        "keyword": {
-          "type": "string",
-          "description": "查询关键词目的地或标题"
-        },
-        "destinationCityId": {
-          "type": "integer",
-          "description": "目的地城市 ID"
-        },
-        "destinationCityName": {
-          "type": "string",
-          "description": "目的地城市名称"
-        },
-        "sortType": {
-          "type": "integer",
-          "description": "排序类型 0 默认综合排序 1 低价优先 2 高价优先"
-        },
-        "current": {
-          "type": "integer",
-          "description": "当前页码"
-        },
-        "size": {
-          "type": "integer",
-          "description": "每页数量"
-        }
+        "keyword": { "description": "查询关键词" },
+        "destinationCityName": { "description": "目的地城市名称 (例如：北京)" },
+        "sortType": { "description": "排序: 0综合 1低价 2高价" },
+        "current": { "description": "当前页码" },
+        "size": { "description": "每页数量" }
       },
-      "required": [
-        "destinationCityName"
-      ]
+      "required": ["destinationCityName"]
     }
   },
   {
@@ -66,20 +23,11 @@
     "subCategory": "TICKET",
     "action": "DETAIL",
     "parameters": {
-      "type": "object",
       "properties": {
-        "poiId": {
-          "type": "integer",
-          "description": "景点 id"
-        },
-        "ticketDate": {
-          "type": "string",
-          "description": "查询日期yyyy-MM-dd，不传，默认当天"
-        }
+        "poiId": { "description": "景点ID" },
+        "ticketDate": { "description": "查询日期yyyy-MM-dd，默认当天" }
       },
-      "required": [
-        "poiId"
-      ]
+      "required": ["poiId"]
     }
   },
   {
@@ -89,12 +37,8 @@
     "subCategory": "COMMON",
     "action": "LIST",
     "parameters": {
-      "type": "object",
       "properties": {
-        "orderType": {
-          "type": "integer",
-          "description": "订单类型 传3表示门票"
-        }
+        "orderType": { "description": "订单类型，3=门票" }
       },
       "required": []
     }
@@ -106,45 +50,25 @@
     "subCategory": "COMMON",
     "action": "SAVE",
     "parameters": {
-      "type": "object",
       "properties": {
-        "passengerName": {
-          "type": "string",
-          "description": "旅客姓名（中文）"
-        },
-        "identityNo": {
-          "type": "string",
-          "description": "证件号码"
-        },
-        "phoneNumber": {
-          "type": "string",
-          "description": "手机号码"
-        }
+        "passengerName": { "description": "旅客姓名" },
+        "identityNo": { "description": "证件号码" },
+        "phoneNumber": { "description": "手机号码" }
       },
-      "required": [
-        "passengerName",
-        "identityNo",
-        "phoneNumber"
-      ]
+      "required": ["passengerName", "identityNo", "phoneNumber"]
     }
   },
   {
     "method": "poiRule",
-    "description": "门票规则完整内容",
+    "description": "门票规则",
     "category": "RESOURCE",
     "subCategory": "TICKET",
     "action": "TICKET_RULE",
     "parameters": {
-      "type": "object",
       "properties": {
-        "resourceId": {
-          "type": "string",
-          "description": "资源 ID"
-        }
+        "resourceId": { "description": "资源ID" }
       },
-      "required": [
-        "resourceId"
-      ]
+      "required": ["resourceId"]
     }
   },
   {
@@ -154,100 +78,30 @@
     "subCategory": "TICKET",
     "action": "BOOK",
     "parameters": {
-      "type": "object",
       "properties": {
-        "phoneNumber": {
-          "type": "string",
-          "description": "联系人用户手机号码"
-        },
-        "orderSource": {
-          "type": "integer",
-          "description": "订单来源 (默认传0)"
-        },
-        "orderType": {
-          "type": "integer",
-          "description": "订单类型,传3-门票"
-        },
-        "serviceFee": {
-          "type": "number",
-          "description": "服务费"
-        },
-        "resourceItemId": {
-          "type": "string",
-          "description": "资源 ID(景点/门票 ID)"
-        },
-        "quantity": {
-          "type": "integer",
-          "description": "购买数量"
-        },
-        "price": {
-          "type": "number",
-          "description": "订单单价"
-        },
-        "totalPrice": {
-          "type": "number",
-          "description": "订单总价"
-        },
-        "travelDate": {
-          "type": "string",
-          "description": "游玩日期，格式：yyyy-MM-dd"
-        },
+        "phoneNumber": { "description": "联系人手机号" },
+        "orderSource": { "description": "订单来源，默认0" },
+        "orderType": { "description": "订单类型，3=门票" },
+        "serviceFee": { "description": "服务费" },
+        "resourceItemId": { "description": "资源ID" },
+        "quantity": { "description": "购买数量" },
+        "price": { "description": "单价" },
+        "totalPrice": { "description": "总价" },
+        "travelDate": { "description": "游玩日期 yyyy-MM-dd" },
         "travellerInfoList": {
-          "type": "array",
-          "description": "出游人信息列表",
+          "description": "出游人列表",
           "items": {
-            "type": "object",
-            "properties": {
-              "passengerId": {
-                "type": "integer",
-                "description": "出行人 id"
-              },
-              "name": {
-                "type": "string",
-                "description": "出行人姓名"
-              },
-              "idNumber": {
-                "type": "string",
-                "description": "出行人证件号码"
-              },
-              "idType": {
-                "type": "string",
-                "description": "出行人证件类型"
-              },
-              "phoneNumber": {
-                "type": "string",
-                "description": "出行人手机号码"
-              }
-            },
-            "required": [
-              "passengerId",
-              "name",
-              "idNumber",
-              "idType"
-            ]
+            "passengerId": { "description": "出行人ID" },
+            "name": { "description": "姓名" },
+            "idNumber": { "description": "证件号" },
+            "idType": { "description": "证件类型" },
+            "phoneNumber": { "description": "手机号" }
           }
         },
-        "name": {
-          "type": "string",
-          "description": "联系人姓名"
-        },
-        "mobile": {
-          "type": "string",
-          "description": "联系人手机号"
-        }
+        "name": { "description": "联系人姓名" },
+        "mobile": { "description": "联系人手机号" }
       },
-      "required": [
-        "phoneNumber",
-        "orderSource",
-        "resourceItemId",
-        "quantity",
-        "price",
-        "totalPrice",
-        "travelDate",
-        "travellerInfoList",
-        "name",
-        "mobile"
-      ]
+      "required": ["phoneNumber", "orderSource", "resourceItemId", "quantity", "price", "totalPrice", "travelDate", "travellerInfoList", "name", "mobile"]
     }
   },
   {
@@ -257,16 +111,10 @@
     "subCategory": "COMMON",
     "action": "STATUS",
     "parameters": {
-      "type": "object",
       "properties": {
-        "orderBaseId": {
-          "type": "string",
-          "description": "订单号"
-        }
+        "orderBaseId": { "description": "订单号" }
       },
-      "required": [
-        "orderBaseId"
-      ]
+      "required": ["orderBaseId"]
     }
   },
   {
@@ -276,16 +124,10 @@
     "subCategory": "TICKET",
     "action": "QUERY",
     "parameters": {
-      "type": "object",
       "properties": {
-        "orderBaseId": {
-          "type": "string",
-          "description": "订单号"
-        }
+        "orderBaseId": { "description": "订单号" }
       },
-      "required": [
-        "orderBaseId"
-      ]
+      "required": ["orderBaseId"]
     }
   },
   {
@@ -295,47 +137,25 @@
     "subCategory": "COMMON",
     "action": "CANCEL",
     "parameters": {
-      "type": "object",
       "properties": {
-        "orderBaseId": {
-          "type": "string",
-          "description": "订单ID"
-        },
-        "orderType": {
-          "type": "integer",
-          "description": "订单类型，传3（门票）"
-        },
-        "subOrderType": {
-          "type": "string",
-          "description": "子订单类型，固定传：DOMESTIC_TICKET"
-        },
-        "cancelReason": {
-          "type": "string",
-          "description": "取消原因"
-        }
+        "orderBaseId": { "description": "订单ID" },
+        "orderType": { "description": "订单类型，3=门票" },
+        "subOrderType": { "description": "子订单类型，固定DOMESTIC_TICKET" },
+        "cancelReason": { "description": "取消原因" }
       },
-      "required": [
-        "orderBaseId"
-      ]
+      "required": ["orderBaseId"]
     }
   },
   {
     "method": "orderHistory",
-    "description": "获取门票订单历史列表",
+    "description": "订单历史列表",
     "category": "ORDER",
     "subCategory": "TICKET",
     "action": "HISTORY",
     "parameters": {
-      "type": "object",
       "properties": {
-        "current": {
-          "type": "integer",
-          "description": "当前页码 默认1"
-        },
-        "size": {
-          "type": "integer",
-          "description": "每页数量 默认15"
-        }
+        "current": { "description": "当前页码，默认1" },
+        "size": { "description": "每页数量，默认15" }
       },
       "required": []
     }
