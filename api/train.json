@@ -1,26 +1,5 @@
 [
   {
-    "method": "cityList",
-    "description": "城市列表",
-    "category": "RESOURCE",
-    "subCategory": "COMMON",
-    "action": "CITY",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "domesticType": {
-          "type": "integer",
-          "description": "国内/国际类型 默认国内 1：国内 2：国际"
-        },
-        "resourceType":{
-          "type": "integer",
-          "description": "资源类型 (默认0；飞机=0, 酒店=1, 火车=2, 门票=3)"
-        }
-      },
-      "required": []
-    }
-  },
-  {
     "method": "train.search",
     "description": "车次列表",
     "category": "RESOURCE",
@@ -411,7 +390,13 @@
         },
         "orderType": {
           "type": "integer",
-          "description": "订单类型，默认2（火车票）"
+          "description": "订单类型，默认2（火车票）",
+          "default": 2
+        },
+        "subOrderType": {
+          "type": "string",
+          "description": "子订单类型，默认 DOMESTIC_TRAIN",
+          "default": "DOMESTIC_TRAIN"
         },
         "cancelReason": {
           "type": "string",
@@ -419,11 +404,14 @@
         },
         "terminalCode": {
           "type": "string",
-          "description": "终端类型，如 APP"
+          "description": "终端类型，如 APP",
+          "default": "APP"
         }
       },
       "required": [
-        "orderBaseId"
+        "orderBaseId",
+        "orderType",
+        "subOrderType"
       ]
     }
   },
