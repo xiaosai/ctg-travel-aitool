@@ -80,7 +80,7 @@ python scripts/apiexe.py call --method getOrderStatus --arg "{\"orderBaseId\": \
 python scripts/apiexe.py call --method orderDetail --arg "{\"orderBaseId\": \"TRO202603151234567890\"}"
 
 # 取消订单（必填：orderBaseId）
-python scripts/apiexe.py call --method ticket.cancelOrder --arg "{\"orderBaseId\": \"xxx\", \"orderType\": 3}"
+python scripts/apiexe.py call --method ticket.cancelOrder --arg "{\"orderBaseId\": \"xxx\", \"orderType\": 3, \"subOrderType\" : \"DOMESTIC_TICKET\"}"
 
 # 订单历史
 python scripts/apiexe.py call --method orderHistory --arg "{\"current\": 1, \"size\": 15}"
@@ -106,6 +106,8 @@ python scripts/apiexe.py call --method orderHistory --arg "{\"current\": 1, \"si
 **门票列表**：格式「① 门票名  ¥价格/张」
 
 **订单详情**：订单号、景点、门票、游玩日期、游客、状态、金额
+
+**订单确认（重要）**：创建订单前必须向用户展示订单信息并确认，用户明确同意后再调用 createTicketOrder，格式如下：
 
 **订单创建成功**：展示订单信息后，提示「请前往「中旅旅行」App 完成支付」
 
