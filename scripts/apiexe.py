@@ -21,7 +21,7 @@ SKILL_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_FILE = SKILL_ROOT / "config" / "ctgConfig.json"
 API_DIR = SKILL_ROOT / "api"
 CACHE_DIR = SKILL_ROOT / "cache"
-CACHE_EXPIRE_SECONDS = 3600  # 1小时
+CACHE_EXPIRE_SECONDS = 24*3600  # 1天
 
 # 支持缓存的接口配置：method -> (缓存文件名模板, 用于构造缓存key的参数列表)
 CACHEABLE_METHODS = {
