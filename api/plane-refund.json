@@ -12,49 +12,19 @@
           "type": "string",
           "description": "订单编号"
         },
-        "resourceType": {
-          "type": "integer",
-          "description": "资源类型，默认0（机票）"
-        },
         "refundType": {
           "type": "integer",
           "description": "退款类型 1-整单退 2-部分退"
         },
-        "applyType": {
-          "type": "integer",
-          "description": "退款类型 0-自愿退票 1-非自愿退票，默认0"
-        },
-        "reason": {
-          "type": "string",
-          "description": "退票原因"
-        },
-        "reasonType": {
-          "type": "integer",
-          "description": "原因类型"
-        },
-        "deductItemList": {
+        "passengerIds": {
           "type": "array",
-          "description": "核损项目列表（必填）",
+          "description": "需要退票的乘客ID列表（部分退时必填）",
           "items": {
-            "type": "object",
-            "properties": {
-              "orderItemNo": {
-                "type": "string",
-                "description": "订单项编号（order item no）"
-              },
-              "passengerIdList": {
-                "type": "array",
-                "description": "需要退票的乘客ID列表（必填）",
-                "items": {
-                  "type": "string"
-                }
-              }
-            },
-            "required": ["orderItemNo", "passengerIdList"]
+            "type": "Long"
           }
         }
       },
-      "required": ["orderBaseId", "resourceType", "refundType", "deductItemList"]
+      "required": ["orderBaseId", "refundType"]
     }
   },
   {

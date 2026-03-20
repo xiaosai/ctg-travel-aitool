@@ -7,26 +7,24 @@
 ## 核心流程
 
 ```
-1. cityList(resourceType=0) → 获取城市列表，得到 cityId、flightCode
-2. flightListV2 → 查询航班列表，入参：fromCity、toCity、fromDate、tripType、adultNum、childNum、cabinGrade
-3. cabinList → 获取舱位详情，入参：goExtData(航班列表返回的 extData)、adultNum、childNum、cabinGrade
-4. getPassengerList(orderType=0) → 乘客列表；无乘客则调用 savePassenger 新增
-5. flight.createOrder → 创建订单，入参：items(resourceItemId、sessionId、goExtData、passengers 等)
-6. getOrderStatus → 轮询订单状态（占位中 → 成功/失败）
-7. orderDetail → 查询订单详情
-8. flight.cancelOrder → 取消未支付订单（仅取消未支付订单，已支付需走退票流程）
-9. orderHistory → 获取历史订单
+1. flightListV2 → 查询航班列表，入参：fromCityName、toCityName、fromDate
+2. cabinList → 获取舱位详情，入参：goExtData(航班列表返回的 extData)
+3. getPassengerList(orderType=0) → 乘客列表；无乘客则调用 savePassenger 新增
+4. flight.createOrder → 创建订单，入参：items(resourceItemId、goExtData、passengers 等)
+5. getOrderStatus → 轮询订单状态（占位中 → 成功/失败）
+6. orderDetail → 查询订单详情
+7. flight.cancelOrder → 取消未支付订单（仅取消未支付订单，已支付需走退票流程）
+8. orderHistory → 获取历史订单
 ```
 
 ---
 
 ## 参数传递依赖
 
-| 接口 | 入参来源 |
-|------|----------|
-| flightListV2 | `fromCity`、`toCity` ← cityList 返回的 `flightCode`<br>`depCityId`、`arrCityId` ← cityList 返回的 `cityId` |
-| cabinList | `goExtData` ← flightListV2 返回的 `goFlight.flights[].extData` |
-| flight.createOrder | `resourceItemId` ← cabinList 返回的 `goFlightCabin.cabinList[].resourceItemId`<br>`sessionId` ← cabinList 返回的 `data.sessionId`<br>`goExtData` ← cabinList 返回的 `goFlightCabin.cabinList[].extData`（整段 JSON 字符串）<br>`passengers` ← getPassengerList 返回的乘客信息 |
+| 接口 | 入参来源                                                                                                                                                                                        |
+|------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| cabinList | `goExtData` ← flightListV2 返回的 `goFlight.flights[].extData`                                                                                                                                 |
+| flight.createOrder | `resourceItemId` ← cabinList 返回的 `goFlightCabin.cabinList[].resourceItemId`<br>`goExtData` ← flightListV2 返回的 `goFlight.flights[].extData`<br>`passengerIds` ← getPassengerList 返回的乘客信息id列表<br>`contactPhone` ← 用户提供的联系手机号 |
 
 ---
 
@@ -64,14 +62,11 @@
 ## 调用命令示例
 
 ```bash
-# 城市列表
-python scripts/apiexe.py call --method cityList --arg "{\"domesticType\": 1, \"resourceType\": 0}"
-
-# 航班列表（必填：fromCity, toCity, fromDate, tripType, adultNum, childNum, cabinGrade）
-python scripts/apiexe.py call --method flightListV2 --arg "{\"fromCity\": \"WUH\", \"fromCityType\": 2, \"fromDate\": \"20260315\", \"toCity\": \"SHA\", \"toCityType\": 2, \"tripType\": 1, \"adultNum\": 1, \"childNum\": 0, \"cabinGrade\": 0}"
+# 航班列表（必填：fromCityName, toCityName, fromDate）
+python scripts/apiexe.py call --method flightListV2 --arg "{\"fromCityName\": \"武汉\", \"fromDate\": \"2026-03-15\", \"toCityName\": \"上海\"}"
 
 # 舱位详情（必填：goExtData, adultNum, childNum, cabinGrade）
-python scripts/apiexe.py call --method cabinList --arg "{\"goExtData\": \"73026665108161745-1\", \"backExtData\": \"\", \"adultNum\": 1, \"childNum\": 0, \"cabinGrade\": 0}"
+python scripts/apiexe.py call --method cabinList --arg "{\"goExtData\": \"73026665108161745-1\"}"
 
 # 乘客列表
 python scripts/apiexe.py call --method getPassengerList --arg "{\"orderType\": 0}"
@@ -80,7 +75,7 @@ python scripts/apiexe.py call --method getPassengerList --arg "{\"orderType\": 0
 python scripts/apiexe.py call --method savePassenger --arg "{\"passengerName\": \"张三\", \"identityType\": \"ID\", \"identityNo\": \"420102199007015297\", \"phoneNumber\": \"13800138000\"}"
 
 # 创建订单（必填：memberId, phoneNumber, orderSource, orderType, subOrderType, tripType, fromDate, totalAmount, payAmount, items, contact, departureCityId, destinationCityId）
-python scripts/apiexe.py call --method flight.createOrder --arg "{\"memberId\": \"xxx\", \"phoneNumber\": \"13800138000\", \"orderSource\": 0, \"orderType\": 0, \"subOrderType\": \"FLIGHT_SINGLE\", \"tripType\": 1, \"fromDate\": \"2026-03-15\", \"totalAmount\": 479, \"payAmount\": 479, \"departureCityId\": \"1669\", \"destinationCityId\": \"785\", \"contact\": {\"phone\": \"13800138000\"}, \"items\": [{\"resourceItemId\": \"xxx\", \"goExtData\": \"{...}\", \"sessionId\": \"xxx\", \"adultNum\": 1, \"childNum\": 0, \"adultSalePrice\": 419, \"adultAirportFee\": 50, \"adultOilFee\": 10, \"childSalePrice\": 0, \"childAirportFee\": 0, \"childOilFee\": 0, \"cabinGrade\": 1, \"passengers\": [{\"passengerId\": 1, \"name\": \"张三\", \"idNumber\": \"420102199007015297\", \"idType\": \"ID\", \"phoneNumber\": \"13800138000\", \"customerType\": \"0\", \"birthday\": \"1990-07-01\"}], \"departCityName\": \"武汉\", \"departCityCode\": \"WUH\", \"arriveCityName\": \"上海\", \"arriveCityCode\": \"SHA\", \"quantity\": 1, \"rangeType\": 1, \"departureDate\": \"2026-03-15\", \"departureTime\": \"08:05\", \"flightNumber\": \"MU2503\", \"contact\": {\"phone\": \"13800138000\"}}]}"
+python scripts/apiexe.py call --method flight.createOrder --arg "{\"resourceItemId\": \"xxx\", \"goExtData\": \"73026665108161745-1\",  \"passengers\": [11,21], \"contactPhone\":\"13801138001\"}"
 
 # 订单状态轮询（必填：orderBaseId）
 python scripts/apiexe.py call --method getOrderStatus --arg "{\"orderBaseId\": \"FRO202603151234567890\"}"

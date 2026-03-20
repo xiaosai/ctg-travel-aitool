@@ -7,9 +7,8 @@
 ## 退票流程
 
 ```
-1. orderDetail → 获取订单详情，供用户确认
-2. orderDeduct → 核损（退票前必调）
-3. flight.refund → 提交退票申请
+1. orderDeduct → 核损（退票前必调）
+2. flight.refund → 提交退票申请
 ```
 
 ---
@@ -18,8 +17,7 @@
 
 | 接口 | 入参来源 |
 |------|----------|
-| orderDetail | `orderBaseId` ← orderHistory 或用户提供 |
-| orderDeduct | `orderBaseId` ← 同上<br>`orderItemNo` ← orderDetail 返回的 `data.flightProductInfos.items[].orderItemNo`<br>`passengerIdList` ← orderDetail 返回的乘客ID列表 |
+| orderDeduct | `orderBaseId` |
 | flight.refund | `orderBaseId` ← 同上<br>`orderItemNo` ← orderDeduct 返回的 `deductItemList[].orderItemNo`<br>`orderPassengerIds` ← orderDeduct 返回的 `deductItemList[].passengerIdList`<br>`amount` ← orderDeduct 返回的 `flightDeductInfo.totalRefundAmount`<br>`refundAmount`（手续费）← orderDeduct 返回的 `flightDeductInfo.totalFeeAmount` |
 
 ---
@@ -40,15 +38,10 @@
 ### orderDeduct（核损）
 **必填**：
 - `orderBaseId`：订单号
-- `resourceType`：资源类型，传 0（机票）
 - `refundType`：1=整单退，2=部分退
-- `deductItemList`：核损项目列表
 
-**deductItemList 结构（必填）**：
-- `orderItemNo`：订单项编号（从订单详情获取）
-- `passengerIdList`：需要退票的乘客ID列表
-  - 全额退票：包含订单中所有乘客ID
-  - 部分退票：只包含用户指定的乘客ID
+**可选**：
+- `passengerIds`：退票乘客ID列表（部分退时必填）
 
 **返参关键字段**：
 - `flightDeductInfo.totalRefundAmount`：退款金额
@@ -78,12 +71,8 @@
 ## 调用命令
 
 ```bash
-
-# 订单详情（必填：orderBaseId）
-python scripts/apiexe.py call --method orderDetail --arg "{\"orderBaseId\": \"FRO202603151234567890\"}"
-
-# 核损（必填：orderBaseId, resourceType, refundType, deductItemList）
-python scripts/apiexe.py call --method orderDeduct --arg "{\"orderBaseId\": \"FRO202603151234567890\", \"resourceType\": 0, \"refundType\": 1, \"applyType\": 0, \"reason\": \"行程变更\", \"deductItemList\": [{\"orderItemNo\": \"OI202603151234567890\", \"passengerIdList\": [\"399\"]}]}"
+# 核损（必填：orderBaseId, refundType；部分退时还需 passengerIds）
+python scripts/apiexe.py call --method orderDeduct --arg "{\"orderBaseId\": \"FRO202603151234567890\", \"refundType\": 1}"
 
 # 申请退票（必填：orderBaseId, orderType, applyType, refundType, amount, refundItemList）
 python scripts/apiexe.py call --method flight.refund --arg "{\"orderBaseId\": \"FRO202603151234567890\", \"orderType\": 0, \"applyType\": 1, \"refundType\": 1, \"amount\": 580, \"reasonType\": 0, \"refundReason\": \"行程变更\", \"refundItemList\": [{\"orderItemNo\": \"OI202603151234567890\", \"orderPassengerIds\": [\"399\"], \"refundQuantity\": 1, \"refundAmount\": 100}]}"
