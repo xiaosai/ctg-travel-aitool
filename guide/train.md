@@ -23,10 +23,10 @@
 
 ## 参数传递依赖
 
-| 接口 | 入参来源 |
-|------|----------|
-| train.detail| `fromStation`、`toStation` 、`ticketDate`、`trainNo` ← train.search返回的 `trainInfos`中的`fromStation`、`toStation`、`fromDate`、`trainNo`|
-| train.createOrder | `resourceItemId` ← train.detail 返回的 `resourceItemId` 、`passengers` ← getPassengerList 返回的乘客信息 |
+| 接口                | 入参来源                                                                                                                                                                                       |
+|-------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| train.detail      | `fromStation`、`toStation` 、`ticketDate`、`trainNo` ← train.search返回的 `trainInfos`中的`fromStation`、`toStation`、`fromDate`、`trainNo`                                                           |
+| train.createOrder | `resourceItemId` ← train.detail 返回的 `resourceItemId` 、`passengers` ← getPassengerList 返回的乘客信息 `adultSalePrice`和 `childSalePrice` ←  train.detail 返回的 `seatDetails`对象中的`price`和`childPrice` |
 
 ---
 ### 订单状态
