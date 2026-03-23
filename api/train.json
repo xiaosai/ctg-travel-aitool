@@ -327,7 +327,7 @@
                     "type": "string",
                     "description": "证件类型"
                   },
-                  "idNo": {
+                  "idNumber": {
                     "type": "string",
                     "description": "证件号码"
                   },
@@ -348,7 +348,7 @@
                     "description": "绑定成人ID (仅免费儿童有效)"
                   }
                 },
-                "required": ["passengerId", "name", "idType", "idNo", "passengerType", "seatTypeName"]
+                "required": ["passengerId", "name", "idType", "idNumber", "passengerType", "seatTypeName"]
               }
             }
           },

@@ -155,7 +155,7 @@
     "parameters": {
       "properties": {
         "current": { "description": "当前页码，默认1" },
-        "size": { "description": "每页数量，默认15" }
+        "size": { "description": "每页数量，默认10" }
       },
       "required": []
     }
