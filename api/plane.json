@@ -18,7 +18,7 @@
         },
         "fromDate": {
           "type": "string",
-          "description": "出发日期，格式 YYYY-MM-DD，如 2026-03-06"
+          "description": "出发日期，格式 yyyyMMdd，如 20260315"
         }
       },
       "required": ["fromCityName", "toCityName", "fromDate"]
@@ -36,25 +36,9 @@
         "goExtData": {
           "type": "string",
           "description": "去程扩展数据，取自航班列表接口 goFlight.flights[].extData"
-        },
-        "backExtData": {
-          "type": "string",
-          "description": "返程扩展数据，单程时传空字符串"
-        },
-        "adultNum": {
-          "type": "integer",
-          "description": "成人数量"
-        },
-        "childNum": {
-          "type": "integer",
-          "description": "儿童数量"
-        },
-        "cabinGrade": {
-          "type": "integer",
-          "description": "舱位等级，默认 0。0-不限 1-经济舱/超级经济舱，2-商务舱/头等舱"
         }
       },
-      "required": ["goExtData", "adultNum", "childNum", "cabinGrade"]
+      "required": ["goExtData"]
     }
   },
   {
@@ -68,7 +52,8 @@
       "properties": {
         "orderType": {
           "type": "integer",
-          "description": "订单类型 默认值0(机票)"
+          "description": "订单类型：0-机票（默认）",
+          "default": 0
         }
       },
       "required": []
@@ -89,7 +74,8 @@
         },
         "identityType": {
           "type": "string",
-          "description": "证件类型，ID-身份证"
+          "description": "证件类型：ID-身份证（默认）",
+          "default": "ID"
         },
         "identityNo": {
           "type": "string",
@@ -169,11 +155,12 @@
         },
         "orderType": {
           "type": "integer",
-          "description": "订单类型，默认0（机票）"
+          "description": "订单类型：0-机票（默认）",
+          "default": 0
         },
         "cancelReason": {
           "type": "string",
-          "description": "取消原因"
+          "description": "取消原因（可选）"
         }
       },
       "required": ["orderBaseId"]
