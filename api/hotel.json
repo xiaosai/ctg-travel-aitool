@@ -1,26 +1,5 @@
 [
   {
-    "method": "cityList",
-    "description": "城市列表",
-    "category": "RESOURCE",
-    "subCategory": "COMMON",
-    "action": "CITY",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "domesticType": {
-          "type": "integer",
-          "description": "国内/国际类型 默认国内 1：国内 2：国际"
-        },
-        "resourceType": {
-          "type": "integer",
-          "description": "资源类型 (默认0；飞机=0, 酒店=1, 火车=2, 门票=3)"
-        }
-      },
-      "required": []
-    }
-  },
-  {
     "method": "hotel.search",
     "description": "酒店搜索",
     "category": "RESOURCE",
@@ -30,10 +9,10 @@
       "type": "object",
       "description": "酒店搜索请求参数",
       "properties": {
-        "cityId": {
-          "type": "integer",
-          "description": "城市ID",
-          "example": 4
+        "cityName": {
+          "type": "string",
+          "description": "城市名称（如：北京、上海、武汉）",
+          "example": "武汉"
         },
         "arrivalDate": {
           "type": "string",
@@ -94,7 +73,7 @@
           "default": 0
         }
       },
-      "required": ["cityId", "arrivalDate", "departureDate", "rank", "filterList"]
+      "required": ["cityName", "arrivalDate", "departureDate", "rank", "filterList"]
     }
   },
   {

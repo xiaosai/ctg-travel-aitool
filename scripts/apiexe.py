@@ -24,9 +24,8 @@ CACHE_DIR = SKILL_ROOT / "cache"
 CACHE_EXPIRE_SECONDS = 24*3600  # 1天
 
 # 支持缓存的接口配置：method -> (缓存文件名模板, 用于构造缓存key的参数列表)
-CACHEABLE_METHODS = {
-    "cityList": ("cityList_{0}_{1}.json", ["resourceType", "domesticType"]),
-}
+# 目前为空，保留框架以便未来扩展
+CACHEABLE_METHODS = {}
 
 
 def get_cache_key(method, params):

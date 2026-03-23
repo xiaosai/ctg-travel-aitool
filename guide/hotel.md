@@ -9,16 +9,15 @@
 ## 核心流程
 
 ```
-1. cityList(resourceType=1) → 获取城市列表，得到 cityId、cityName
-2. hotel.search → 查询酒店列表，入参：cityId、arrivalDate、departureDate、page、pageSize
-3. hotel.detail → 获取房型列表，入参：hotelId、arrivalDate、departureDate
-4. hotel.validatePrice → 验价（可选），入参：resourceItemId、checkInDate、checkOutDate、roomCount
-5. getPassengerList(orderType=1) → 入住人列表；无入住人则调用 savePassenger 新增
-6. hotel.createOrder → 创建订单，入参：resourceItemId、travelerList、price、checkInDate、checkOutDate、roomNum 等
-7. getOrderStatus → 轮询订单状态（间隔10秒，最多6次）
-8. orderDetail → 查询订单详情
-9. hotel.cancelOrder → 取消未支付订单
-10. orderHistory → 获取历史订单
+1. hotel.search → 查询酒店列表，入参：cityName、arrivalDate、departureDate、page、pageSize
+2. hotel.detail → 获取房型列表，入参：hotelId、arrivalDate、departureDate
+3. hotel.validatePrice → 验价（可选），入参：resourceItemId、checkInDate、checkOutDate、roomCount
+4. getPassengerList(orderType=1) → 入住人列表；无入住人则调用 savePassenger 新增
+5. hotel.createOrder → 创建订单，入参：resourceItemId、travelerList、price、checkInDate、checkOutDate、roomNum 等
+6. getOrderStatus → 轮询订单状态（间隔10秒，最多6次）
+7. orderDetail → 查询订单详情
+8. hotel.cancelOrder → 取消未支付订单
+9. orderHistory → 获取历史订单
 ```
 
 ---
@@ -27,7 +26,7 @@
 
 | 接口 | 入参来源 |
 |------|----------|
-| hotel.search | `cityId` ← cityList 返回的 `cityId`<br>`arrivalDate`、`departureDate` ← 用户输入 |
+| hotel.search | `cityName` ← 用户输入<br>`arrivalDate`、`departureDate` ← 用户输入 |
 | hotel.detail | `hotelId` ← hotel.search 返回的 `hotelId` |
 | hotel.validatePrice | `resourceItemId` ← hotel.detail 返回的房型 `resourceItemId` |
 | hotel.createOrder | `resourceItemId` ← hotel.detail 返回<br>`travelerList` ← getPassengerList 返回<br>`price` ← 房型价格 |
@@ -64,11 +63,8 @@
 ## 调用命令示例
 
 ```bash
-# 城市列表
-python scripts/apiexe.py call --method cityList --arg "{\"domesticType\": 1, \"resourceType\": 1}"
-
 # 酒店列表
-python scripts/apiexe.py call --method hotel.search --arg "{\"cityId\": 4, \"arrivalDate\": \"2026-03-15\", \"departureDate\": \"2026-03-17\", \"page\": 1, \"pageSize\": 10}"
+python scripts/apiexe.py call --method hotel.search --arg "{\"cityName\": \"武汉\", \"arrivalDate\": \"2026-03-15\", \"departureDate\": \"2026-03-17\", \"page\": 1, \"pageSize\": 10}"
 
 # 酒店详情（房型列表）
 python scripts/apiexe.py call --method hotel.detail --arg "{\"hotelId\": \"H123456\", \"arrivalDate\": \"2026-03-15\", \"departureDate\": \"2026-03-17\"}"
