@@ -83,15 +83,27 @@ def get_call_url(config):
 
 def compute_signature(secret_key, method_part, params_part, timestamp, nonce):
     """计算 HMAC-SHA256 + Base64 签名（与服务端约定：method_json|params_json|timestamp|nonce）"""
-    method_json = json.dumps(method_part, separators=(',', ':'), ensure_ascii=False)
+    # 签名计算时排除 version 字段（version 用于路由，不参与签名）
+    method_for_sign = {k: v for k, v in method_part.items() if k != "version"}
+    # 不使用 sort_keys，保持原始字段顺序（与服务端 ObjectMapper 一致）
+    method_json = json.dumps(method_for_sign, separators=(',', ':'), ensure_ascii=False)
     params_json = json.dumps(params_part, separators=(',', ':'), ensure_ascii=False)
     sign_data = f"{method_json}|{params_json}|{timestamp}|{nonce}"
+
+    # DEBUG: 打印签名数据
+    print(f"===== 签名调试信息 =====", file=sys.stderr)
+    print(f"method_json: {method_json}", file=sys.stderr)
+    print(f"params_json: {params_json}", file=sys.stderr)
+    print(f"sign_data: {sign_data}", file=sys.stderr)
+
     signature = hmac.new(
         secret_key.encode('utf-8'),
         sign_data.encode('utf-8'),
         hashlib.sha256
     ).digest()
     signature_b64 = base64.b64encode(signature).decode('utf-8')
+    print(f"signature: {signature_b64}", file=sys.stderr)
+    print(f"========================", file=sys.stderr)
     return signature_b64
 
 
@@ -100,6 +112,7 @@ def build_payload(config, method_part, params_part):
     timestamp = int(time.time() * 1000)
     nonce = random.randint(1, 100)
     api_key = config.get("apiKey", "")
+
     signature_b64 = compute_signature(api_key, method_part, params_part, timestamp, nonce)
     auth_part = {
         "key": api_key,
@@ -107,6 +120,11 @@ def build_payload(config, method_part, params_part):
         "nonce": nonce,
         "signature": signature_b64
     }
+
+    # 发送请求时，如果 version 为 None 则不发送该字段
+    if method_part.get("version") is None:
+        method_part.pop("version", None)
+
     return {
         "method": method_part,
         "params": params_part,
@@ -114,12 +132,17 @@ def build_payload(config, method_part, params_part):
     }
 
 
-def api_call(url, payload, timeout=30):
+def api_call(url, payload, config, timeout=30):
     import urllib.request
     import urllib.error
 
+    skill_version = config.get("skillVersion", "1.2.0")
     data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-    headers = {"Content-Type": "application/json"}
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": f"CTGTravelSkill/{skill_version}",
+        "X-Skill-Version": skill_version
+    }
     req = urllib.request.Request(url, data=data, method="POST", headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
@@ -154,7 +177,7 @@ def load_api_definitions(api_file=None):
 
 
 def find_method_by_method(definitions, method):
-    """根据 method 查找对应的 category、subCategory、action（从接口定义顶层读取）"""
+    """根据 method 查找对应的 category、subCategory、action、version（从接口定义顶层读取）"""
     for d in definitions:
         if d.get("method") == method:
             sub_cat = d.get("subCategory") or d.get("platform")
@@ -163,6 +186,7 @@ def find_method_by_method(definitions, method):
                     "category": d["category"],
                     "subCategory": sub_cat,
                     "action": d["action"],
+                    "version": d.get("version"),  # 从接口定义读取，可能为 None
                 }
             raise ValueError(f"接口 {method} 缺少 category/subCategory(或 platform)/action 定义")
     raise ValueError(f"未找到接口定义: {method}")
@@ -248,7 +272,7 @@ def main():
             sys.exit(0)
     
     try:
-        result = api_call(url, payload)
+        result = api_call(url, payload, config)
         # 保存缓存
         if cache_key and result.get("success"):
             save_cache_data(cache_key, result)

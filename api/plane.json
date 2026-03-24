@@ -5,6 +5,7 @@
     "category": "RESOURCE",
     "subCategory": "FLIGHT",
     "action": "SEARCH",
+    "version": "v2",
     "parameters": {
       "type": "object",
       "properties": {
@@ -95,6 +96,7 @@
     "category": "ORDER",
     "subCategory": "FLIGHT",
     "action": "BOOK",
+    "version": "v2",
     "parameters": {
       "type": "object",
       "properties": {
