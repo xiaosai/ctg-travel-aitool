@@ -17,6 +17,12 @@ import sys
 import time
 from pathlib import Path
 
+# 强制设置 stdout/stderr 编码为 UTF-8，避免 Windows 环境下中文乱码
+if sys.platform == "win32":
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 SKILL_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_FILE = SKILL_ROOT / "config" / "ctgConfig.json"
 API_DIR = SKILL_ROOT / "api"
