@@ -21,7 +21,7 @@
 
 ---
 
-### 步骤2：核损计算 (orderDeduct)
+### 步骤2：核损计算 (flight.rderDeduct)
 
 **入参**：`orderBaseId`、`refundType`、`passengerIds`(部分退时必填)
 
