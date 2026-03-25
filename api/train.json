@@ -1,26 +1,5 @@
 [
   {
-    "method": "cityList",
-    "description": "城市列表",
-    "category": "RESOURCE",
-    "subCategory": "COMMON",
-    "action": "CITY",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "domesticType": {
-          "type": "integer",
-          "description": "国内/国际类型 默认国内 1：国内 2：国际"
-        },
-        "resourceType":{
-          "type": "integer",
-          "description": "资源类型 (默认0；飞机=0, 酒店=1, 火车=2, 门票=3)"
-        }
-      },
-      "required": []
-    }
-  },
-  {
     "method": "train.search",
     "description": "车次列表",
     "category": "RESOURCE",
@@ -348,7 +327,7 @@
                     "type": "string",
                     "description": "证件类型"
                   },
-                  "idNo": {
+                  "idNumber": {
                     "type": "string",
                     "description": "证件号码"
                   },
@@ -369,7 +348,7 @@
                     "description": "绑定成人ID (仅免费儿童有效)"
                   }
                 },
-                "required": ["passengerId", "name", "idType", "idNo", "passengerType", "seatTypeName"]
+                "required": ["passengerId", "name", "idType", "idNumber", "passengerType", "seatTypeName"]
               }
             }
           },
@@ -398,7 +377,7 @@
   },
   {
     "method": "train.cancelOrder",
-    "description": "取消火车票订单",
+    "description": "取消火车票订单（支付前）",
     "category": "ORDER",
     "subCategory": "COMMON",
     "action": "CANCEL",
@@ -411,7 +390,13 @@
         },
         "orderType": {
           "type": "integer",
-          "description": "订单类型，默认0（机票）"
+          "description": "订单类型，默认2（火车票）",
+          "default": 2
+        },
+        "subOrderType": {
+          "type": "string",
+          "description": "子订单类型，默认 DOMESTIC_TRAIN",
+          "default": "DOMESTIC_TRAIN"
         },
         "cancelReason": {
           "type": "string",
@@ -419,11 +404,14 @@
         },
         "terminalCode": {
           "type": "string",
-          "description": "终端类型，如 APP"
+          "description": "终端类型，如 APP",
+          "default": "APP"
         }
       },
       "required": [
-        "orderBaseId"
+        "orderBaseId",
+        "orderType",
+        "subOrderType"
       ]
     }
   },
@@ -442,54 +430,6 @@
         }
       },
       "required": ["memberId"]
-    }
-  },
-  {
-    "method": "train.refund",
-    "description": "申请火车票退票",
-    "category": "ORDER",
-    "subCategory": "TRAIN",
-    "action": "REFUND",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "orderBaseId": {
-          "type": "string",
-          "description": "订单号"
-        },
-        "refundType": {
-          "type": "integer",
-          "description": "退票类型 1-全额退票（全退） 2-部分退票（部分乘客退）"
-        },
-        "orderItemNo": {
-          "type": "string",
-          "description": "订单明细编号"
-        },
-        "memberId": {
-          "type": "string",
-          "description": "会员编号"
-        },
-        "applyType": {
-          "type": "integer",
-          "description": "申请类型，默认1"
-        },
-        "amount": {
-          "type": "number",
-          "description": "退款金额"
-        },
-        "originAmount": {
-          "type": "number",
-          "description": "原金额"
-        },
-        "orderPassengerIds": {
-          "type": "array",
-          "description": "订单使用人id",
-          "items" : {
-            "type" : "long"
-          }
-        }
-      },
-      "required": ["orderBaseId", "orderItemNo", "amount", "originAmount", "orderPassengerIds"]
     }
   },
   {

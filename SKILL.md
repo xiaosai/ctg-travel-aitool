@@ -46,9 +46,13 @@ examples:
 | 资源线 | 触发示例（命中则加载对应 guide） | 操作指南 | 接口文档 |
 |--------|----------------------------------|----------|----------|
 | **火车** | 买火车票、订火车票、买高铁票、动车票、预定武汉-北京火车票、查询火车票/高铁票、去上海有什么车次、坐 G101 去北京 | [guide/train.md](guide/train.md) | [api/train.json](api/train.json) |
-| **机票** | 买机票、订机票、买飞机票、预定北京-上海机票、查询航班/机票、明天飞杭州有什么航班、坐飞机去广州 | [guide/plane.md](guide/plane.md) | [api/plane.json](api/plane.json) |
-| **酒店** | 预订酒店、订酒店、订房 | [guide/hotel.md](guide/hotel.md) | [api/hotel.json](api/hotel.json) |
-| **门票** | 购买门票、订门票、景区门票 | [guide/ticket.md](guide/ticket.md) | [api/ticket.json](api/ticket.json) |
+| **火车票退订** | 火车票退票、我要退票、申请退款、确认退票 | [guide/train-refund.md](guide/train-refund.md) | [api/train-refund.json](api/train-refund.json) |
+| **机票** | 买机票、订机票、买飞机票、预定北京-上海机票、查询航班/机票、明天飞杭州有什么航班、坐飞机去广州、机票订单 | [guide/plane.md](guide/plane.md) | [api/plane.json](api/plane.json) |
+| **机票退订** | 退机票、机票退票、机票退款、申请退款、把刚刚预定的机票退了、取消这张机票（已支付）、张三退票、张三和李四退票 | [guide/plane-refund.md](guide/plane-refund.md) | [api/plane-refund.json](api/plane-refund.json) |
+| **酒店** | 预订酒店、订酒店、订房、酒店订单、我的酒店订单、取消订单（未支付） | [guide/hotel.md](guide/hotel.md) | [api/hotel.json](api/hotel.json) |
+| **酒店退订** | 退订酒店、酒店退款、申请退款、我要退订 | [guide/hotel-refund.md](guide/hotel-refund.md) | [api/hotel-refund.json](api/hotel-refund.json) |
+| **门票** | 购买门票、订门票、景区门票、查询门票、门票订单 | [guide/ticket.md](guide/ticket.md) | [api/ticket.json](api/ticket.json) |
+| **门票退订** | 退门票、门票退票、门票退款、申请退款、把刚刚预定的门票退了、取消这张门票（已支付） | [guide/ticket-refund.md](guide/ticket-refund.md) | [api/ticket-refund.json](api/ticket-refund.json) |
 
 **按需加载**：若用户说「我要买火车票」→ 仅加载 `guide/train.md` 和 `api/train.json`，按该指南执行。若用户说「查一下明天北京到上海的航班」→ 仅加载 `guide/plane.md` 和 `api/plane.json`。未涉及到的资源线不加载其 guide。
 
@@ -70,12 +74,9 @@ examples:
 ## 二、整体交互流程
 
 ```
-用户输入
-  → 用「一、触发条件」匹配资源线（火车/机票/酒店/门票）
-  → 若未命中：判断是否模糊旅游推荐 → 若是则推荐目的地并引导明确资源
-  → 若命中某资源线：按需加载该资源的 guide/xxx.md 和 api/xxx.json
-  → 按操作指南逐步收集必填参数，执行请求（内部使用 scripts/apiexe.py）
-  → 将结果用通俗易懂的话术反馈给用户，禁止出现「调用某某接口」等技术用语
+用户输入 → 匹配触发条件 → 按需加载 guide + api → 收集必填参数 → 话术反馈
+- 未命中触发条件 → 判断是否模糊旅游推荐 → 引导明确资源
+- 禁止出现技术用语（接口名、API、method 等）
 ```
 
 ---
@@ -86,17 +87,10 @@ examples:
 
 - **URL**：`callUrl`（config 中配置）
 - **方法**：POST
-- **请求体**：由 `scripts/apiexe.py` 自动构造，格式为：
-  ```json
-  {
-    "method": {"category":"RESOURCE","subCategory":"TRAIN","action":"SEARCH"},
-    "params": { },
-    "auth": {"key":"apiKey","timestamp":"毫秒时间戳","nonce":"1-100随机数","signature":"HMAC-SHA256+Base64签名"}
-  }
-  ```
-  - `method`：从 api/*.json 对应接口字段获取（category、subCategory、action；定义中的 platform 会映射为 subCategory）
+- **请求体字段**：
+  - `method`：从 api/*.json 获取（category、subCategory、action）
   - `params`：业务参数，对应接口文档中的 `parameters`
-  - `auth`：脚本自动生成（key 取自 ctgConfig.apiKey，timestamp、nonce、signature 按规范计算）
+  - `auth`：脚本自动生成（key、timestamp、nonce、signature）
 
 ### 调用方式
 
@@ -108,30 +102,9 @@ examples:
 - **后台报错**：将错误转化为通俗话术（如「暂时无法获取结果，请稍后再试」），引导用户重试，**切勿**直接说「接口错误」「API 报错」等
 - **流程卡住时的统一引导**：当多次重试仍失败或流程无法继续时，提示用户：「抱歉，当前服务暂时繁忙。您可以前往「中旅旅行」App 完成操作，体验更流畅。」
 
-### 缓存策略
-
-为减少重复请求、节省 token，`cityList` 等接口支持本地缓存：
-
-| 接口 | 缓存文件 | 过期时间 |
-|------|----------|----------|
-| `cityList` | `cache/cityList_{resourceType}_{domesticType}.json` | 1 小时 |
-
 ---
 
-## 四、资源线操作指南（按需加载）
-
-上述「一、触发条件」表中已列出各资源线对应的操作指南与接口文档。**仅在识别到用户要预定/查询该资源时**才加载对应文件：
-
-- 火车意图 → 加载 [guide/train.md](guide/train.md) + [api/train.json](api/train.json)
-- 机票意图 → 加载 [guide/plane.md](guide/plane.md) + [api/plane.json](api/plane.json)
-- 酒店意图 → 加载 [guide/hotel.md](guide/hotel.md) + [api/hotel.json](api/hotel.json)
-- 门票意图 → 加载 [guide/ticket.md](guide/ticket.md) + [api/ticket.json](api/ticket.json)
-
-按加载后的操作指南引导用户输入必填参数，再发起请求。**对用户说的每一句话都必须是业务话术，不得出现接口名、API、调用等技术用语。**
-
----
-
-## 五、入参引导与结果反馈
+## 四、入参引导与结果反馈
 
 ### 面向用户的文案（重要）
 
@@ -157,26 +130,3 @@ examples:
 
 - 不要直接返回后台原始响应或技术字段
 - 始终用通俗、日常的语言与用户沟通
-
----
-
-## 六、目录结构
-
-```
-travel-project/
-├── SKILL.md
-├── config/
-│   ├── ctgConfig.json          # 实际配置（apiKey、callUrl）
-├── guide/
-│   ├── train.md            # 火车票操作指南
-│   ├── plane.md            # 机票操作指南
-│   ├── hotel.md            # 酒店操作指南
-│   └── ticket.md           # 门票操作指南
-├── scripts/
-│   └── apiexe.py           # 统一接口调用脚本（火车票等）
-└── api/
-    ├── train.json          # 火车接口文档
-    ├── plane.json          # 机票接口文档
-    ├── hotel.json          # 酒店接口文档
-    └── ticket.json         # 门票接口文档
-```

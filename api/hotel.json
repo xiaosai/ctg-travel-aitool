@@ -1,26 +1,5 @@
 [
   {
-    "method": "cityList",
-    "description": "城市列表",
-    "category": "RESOURCE",
-    "subCategory": "COMMON",
-    "action": "CITY",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "domesticType": {
-          "type": "integer",
-          "description": "国内/国际类型 默认国内 1：国内 2：国际"
-        },
-        "resourceType": {
-          "type": "integer",
-          "description": "资源类型 (默认0；飞机=0, 酒店=1, 火车=2, 门票=3)"
-        }
-      },
-      "required": []
-    }
-  },
-  {
     "method": "hotel.search",
     "description": "酒店搜索",
     "category": "RESOURCE",
@@ -30,10 +9,10 @@
       "type": "object",
       "description": "酒店搜索请求参数",
       "properties": {
-        "cityId": {
-          "type": "integer",
-          "description": "城市ID",
-          "example": 4
+        "cityName": {
+          "type": "string",
+          "description": "城市名称（如：北京、上海、武汉）",
+          "example": "武汉"
         },
         "arrivalDate": {
           "type": "string",
@@ -94,7 +73,7 @@
           "default": 0
         }
       },
-      "required": ["cityId", "arrivalDate", "departureDate", "rank", "filterList"]
+      "required": ["cityName", "arrivalDate", "departureDate", "rank", "filterList"]
     }
   },
   {
@@ -431,6 +410,10 @@
           "type": "integer",
           "description": "订单类型，酒店传1"
         },
+        "subOrderType": {
+          "type": "integer",
+          "description": "子订单类型，酒店传1"
+        },
         "cancelReason": {
           "type": "string",
           "description": "取消原因"
@@ -440,7 +423,7 @@
           "description": "终端类型，如 APP"
         }
       },
-      "required": ["orderBaseId"]
+      "required": ["orderBaseId", "subOrderType"]
     }
   },
   {
@@ -485,146 +468,6 @@
         }
       },
       "required": ["orderBaseId"]
-    }
-  },
-  {
-    "method": "orderDeduct",
-    "description": "酒店订单核损（退订前必调）",
-    "category": "ORDER",
-    "subCategory": "COMMON",
-    "action": "DEDUCT",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "orderBaseId": {
-          "type": "string",
-          "description": "订单编号"
-        },
-        "resourceType": {
-          "type": "integer",
-          "description": "资源类型，酒店传1"
-        },
-        "refundType": {
-          "type": "integer",
-          "description": "退订类型 1-全额退订 2-部分退订"
-        },
-        "applyType": {
-          "type": "integer",
-          "description": "申请类型，默认1"
-        },
-        "reason": {
-          "type": "string",
-          "description": "退订原因"
-        },
-        "reasonType": {
-          "type": "integer",
-          "description": "原因类型"
-        },
-        "deductItemList": {
-          "type": "array",
-          "description": "核损项目列表（必填）",
-          "items": {
-            "type": "object",
-            "properties": {
-              "orderItemNo": {
-                "type": "string",
-                "description": "订单项编号（从订单详情获取，取值 data.hotelProductInfo.orderItemNo）"
-              },
-              "passengerIdList": {
-                "type": "array",
-                "description": "需要退订的入住人ID列表（必填）",
-                "items": {
-                  "type": "integer"
-                }
-              }
-            },
-            "required": ["orderItemNo", "passengerIdList"]
-          }
-        }
-      },
-      "required": ["orderBaseId", "resourceType", "refundType", "deductItemList"]
-    }
-  },
-  {
-    "method": "hotel.refund",
-    "description": "申请酒店退订",
-    "category": "ORDER",
-    "subCategory": "HOTEL",
-    "action": "REFUND",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "orderBaseId": {
-          "type": "string",
-          "description": "订单号"
-        },
-        "orderType": {
-          "type": "integer",
-          "description": "订单类型，酒店传1"
-        },
-        "orderItemNo": {
-          "type": "string",
-          "description": "订单明细编号（从核损结果的 deductItemList[].orderItemNo 获取）"
-        },
-        "refundType": {
-          "type": "integer",
-          "description": "退订类型 1-全额退订 2-部分退订",
-          "enum": [1, 2]
-        },
-        "amount": {
-          "type": "number",
-          "description": "退款金额（从核损结果获取）"
-        },
-        "originAmount": {
-          "type": "number",
-          "description": "原支付金额（从订单详情获取）"
-        },
-        "orderPassengerIds": {
-          "type": "array",
-          "description": "入住人ID列表",
-          "items": {
-            "type": "integer"
-          }
-        },
-        "applyType": {
-          "type": "integer",
-          "description": "申请类型，默认1"
-        },
-        "refundReason": {
-          "type": "string",
-          "description": "退订原因"
-        },
-        "refundItemList": {
-          "type": "array",
-          "description": "退订明细列表",
-          "items": {
-            "type": "object",
-            "properties": {
-              "orderItemNo": {
-                "type": "string",
-                "description": "订单明细编号（从核损结果的 deductItemList[].orderItemNo 获取）"
-              },
-              "orderPassengerIds": {
-                "type": "array",
-                "description": "入住人ID列表（从核损结果的 deductItemList[].passengerIdList 获取）",
-                "items": {
-                  "type": "integer"
-                }
-              },
-              "refundQuantity": {
-                "type": "integer",
-                "description": "本次退订房间数"
-              },
-              "refundAmount": {
-                "type": "number",
-                "description": "手续费（从核损结果获取）"
-              }
-            },
-            "required": ["orderItemNo", "orderPassengerIds", "refundQuantity", "refundAmount"]
-          }
-        }
-      },
-      "required": ["orderBaseId", "orderItemNo", "amount", "refundItemList"]
     }
   }
 ]
