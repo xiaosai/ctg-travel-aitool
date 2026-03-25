@@ -157,15 +157,29 @@
         },
         "orderType": {
           "type": "integer",
-          "description": "订单类型：0-机票（默认）",
+          "description": "订单类型，默认0（飞机）",
           "default": 0
+        },
+        "subOrderType": {
+          "type": "string",
+          "description": "子订单类型，默认 DOMESTIC_FLIGHT",
+          "default": "DOMESTIC_FLIGHT"
         },
         "cancelReason": {
           "type": "string",
-          "description": "取消原因（可选）"
+          "description": "取消原因"
+        },
+        "terminalCode": {
+          "type": "string",
+          "description": "终端类型，如 APP",
+          "default": "APP"
         }
       },
-      "required": ["orderBaseId"]
+      "required": [
+        "orderBaseId",
+        "orderType",
+        "subOrderType"
+      ]
     }
   },
   {
